@@ -26,7 +26,45 @@ function luhn(num) {
 }
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const dados = form => Object.fromEntries(new FormData(form));
-function erro(form, msg) { const p = form.querySelector(".erro"); p.textContent = msg || ""; p.hidden = !msg; }
+function erro(form, msg, campos = []) {
+  const p = form.querySelector(".erro"); p.textContent = msg || ""; p.hidden = !msg;
+  form.querySelectorAll(".invalido").forEach(i => i.classList.remove("invalido"));
+  campos.forEach(n => form[n] && form[n].classList.add("invalido"));
+  if (msg) { p.classList.remove("tremer"); void p.offsetWidth; p.classList.add("tremer"); }
+}
+// Botão "olho" para mostrar/esconder a senha
+const OLHO = '<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const OLHO_FECHADO = '<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.5 7 10 7c1.9 0 3.5-.6 4.9-1.4M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+function adicionarOlhos() {
+  document.querySelectorAll('input[type="password"]').forEach(inp => {
+    const caixa = document.createElement("span"); caixa.className = "campo-senha";
+    inp.parentNode.insertBefore(caixa, inp); caixa.appendChild(inp);
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "olho"; b.innerHTML = OLHO; b.setAttribute("aria-label", "Mostrar senha");
+    b.addEventListener("click", () => {
+      const mostrar = inp.type === "password";
+      inp.type = mostrar ? "text" : "password";
+      b.innerHTML = mostrar ? OLHO_FECHADO : OLHO;
+      b.setAttribute("aria-label", mostrar ? "Esconder senha" : "Mostrar senha");
+      inp.focus();
+    });
+    caixa.appendChild(b);
+  });
+}
+// Mostra na hora se a confirmação bate com a senha
+function conferirSenhas(form, campoSenha, campoConfirmar) {
+  const dica = document.createElement("small"); dica.className = "dica-senha"; dica.hidden = true;
+  form[campoConfirmar].closest("label").appendChild(dica);
+  const checar = () => {
+    const s = form[campoSenha].value, c = form[campoConfirmar].value;
+    if (!c) { dica.hidden = true; return; }
+    const ok = s === c; dica.hidden = false;
+    dica.textContent = ok ? "✓ As senhas conferem" : "✗ As senhas não conferem";
+    dica.className = "dica-senha " + (ok ? "ok" : "falha");
+  };
+  form[campoSenha].addEventListener("input", checar); form[campoConfirmar].addEventListener("input", checar);
+  form.addEventListener("reset", () => { dica.hidden = true; });
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(location.search);
@@ -36,6 +74,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll("[data-mascara]").forEach(i =>
     i.addEventListener("input", () => { i.value = MASCARAS[i.dataset.mascara](i.value); }));
+  adicionarOlhos();
+  conferirSenhas(document.getElementById("form-cadastrar"), "senha", "confirmar");
+  conferirSenhas(document.getElementById("form-senha"), "nova", "confirmar");
+  // Ao digitar de novo, tira o vermelho do campo
+  document.querySelectorAll(".form input").forEach(i => i.addEventListener("input", () => i.classList.remove("invalido")));
   document.querySelector("#form-endereco select").insertAdjacentHTML("beforeend", ESTADOS.map(e => `<option>${e}</option>`).join(""));
 
   // ----- Entrar / Criar conta -----
@@ -43,6 +86,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".aba").forEach(x => x.classList.toggle("ativo", x === b));
     document.getElementById("form-entrar").hidden = b.dataset.aba !== "entrar";
     document.getElementById("form-cadastrar").hidden = b.dataset.aba !== "cadastrar";
+    const novo = b.dataset.aba === "cadastrar";
+    document.querySelector(".conta-titulo").textContent = novo ? "Criar conta" : "Entrar";
+    document.querySelector(".conta-sub").textContent = novo ? "Cadastre-se para comprar e acompanhar seus pedidos" : "Acesse sua conta para acompanhar seus pedidos";
   }));
   const depoisDeEntrar = () => {
     if (voltarPagamento) { location.href = "index.html#pagamento"; return; }
@@ -50,18 +96,18 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   document.getElementById("form-entrar").addEventListener("submit", async e => {
     e.preventDefault(); const f = e.target, d = dados(f);
-    if (!d.email || !d.senha) return erro(f, "Preencha e-mail e senha.");
+    if (!d.email || !d.senha) return erro(f, "Preencha e-mail e senha.", [!d.email && "email", !d.senha && "senha"].filter(Boolean));
     try { await Auth.entrar(d.email, d.senha); f.reset(); erro(f); depoisDeEntrar(); }
-    catch (x) { erro(f, x.message); }
+    catch (x) { erro(f, x.message, ["email", "senha"]); f.senha.value = ""; f.senha.focus(); }
   });
   document.getElementById("form-cadastrar").addEventListener("submit", async e => {
     e.preventDefault(); const f = e.target, d = dados(f);
-    if (!d.nome.trim() || !d.email || !d.senha) return erro(f, "Preencha todos os campos.");
-    if (!f.email.checkValidity()) return erro(f, "Digite um e-mail válido.");
-    if (d.senha.length < 6) return erro(f, "A senha precisa ter pelo menos 6 caracteres.");
-    if (d.senha !== d.confirmar) return erro(f, "As senhas não conferem.");
+    if (!d.nome.trim() || !d.email || !d.senha) return erro(f, "Preencha todos os campos.", [!d.nome.trim() && "nome", !d.email && "email", !d.senha && "senha"].filter(Boolean));
+    if (!f.email.checkValidity()) return erro(f, "Digite um e-mail válido.", ["email"]);
+    if (d.senha.length < 6) return erro(f, "A senha precisa ter pelo menos 6 caracteres.", ["senha"]);
+    if (d.senha !== d.confirmar) return erro(f, "Erro na senha: a confirmação está diferente da senha.", ["confirmar"]);
     try { await Auth.cadastrar(d); f.reset(); erro(f); aviso("Conta criada! Bem-vindo(a) 🎉"); depoisDeEntrar(); }
-    catch (x) { erro(f, x.message); }
+    catch (x) { erro(f, x.message, ["email"]); }
   });
 
   // ----- Painel do cliente -----
@@ -157,10 +203,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("form-senha").addEventListener("submit", async e => {
     e.preventDefault(); const f = e.target, d = dados(f);
     if (!d.atual || !d.nova) return erro(f, "Preencha os campos de senha.");
-    if (d.nova.length < 6) return erro(f, "A nova senha precisa ter pelo menos 6 caracteres.");
-    if (d.nova !== d.confirmar) return erro(f, "As senhas novas não conferem.");
+    if (d.nova.length < 6) return erro(f, "A nova senha precisa ter pelo menos 6 caracteres.", ["nova"]);
+    if (d.nova !== d.confirmar) return erro(f, "Erro na senha: a confirmação está diferente da nova senha.", ["confirmar"]);
     try { await Auth.trocarSenha(d.atual, d.nova); f.reset(); erro(f); aviso("Senha alterada com sucesso!"); }
-    catch (x) { erro(f, x.message); }
+    catch (x) { erro(f, x.message, ["atual"]); f.atual.value = ""; f.atual.focus(); }
   });
 
   // ----- Mostra a área certa -----
@@ -169,8 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
     areaLogin.hidden = !!u; areaCliente.hidden = !u;
     atualizarCabecalho();
     if (!u) {
-      document.querySelector(".conta-titulo").textContent = "Entrar";
-      document.querySelector(".conta-sub").textContent = "Acesse sua conta para acompanhar seus pedidos";
+      document.querySelector('.aba[data-aba="entrar"]').click();
       const av = document.querySelector(".auth-aviso");
       av.hidden = !voltarPagamento; av.textContent = "Entre ou crie sua conta para finalizar a compra. Seu carrinho está guardado.";
       return;

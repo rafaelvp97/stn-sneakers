@@ -29,14 +29,14 @@ const Auth = (() => {
   async function entrar(email, senha) {
     email = email.trim().toLowerCase();
     const u = usuarios()[email];
-    if (!u || u.senha !== await hash(senha)) throw new Error("E-mail ou senha incorretos.");
+    if (!u || u.senha !== await hash(senha)) throw new Error("Erro na senha ou login. Confira o e-mail e a senha e tente novamente.");
     gravar("stn_sessao", email); return u;
   }
   function sair() { try { localStorage.removeItem("stn_sessao"); } catch (e) {} }
   function atualizar(fn) { const u = atual(); if (!u) return null; fn(u); salvarUsuario(u); return u; }
   async function trocarSenha(senhaAtual, nova) {
     const u = atual();
-    if (!u || u.senha !== await hash(senhaAtual)) throw new Error("A senha atual está incorreta.");
+    if (!u || u.senha !== await hash(senhaAtual)) throw new Error("Erro na senha: a senha atual está incorreta.");
     const h = await hash(nova); atualizar(x => { x.senha = h; });
   }
   return { atual, cadastrar, entrar, sair, atualizar, trocarSenha };
