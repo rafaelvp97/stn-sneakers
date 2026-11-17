@@ -273,11 +273,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const carrossel = document.querySelector(".carrossel");
   if (carrossel) iniciarCarrossel(carrossel);
 
-  // Botão Suporte: já preenche o e-mail com os dados do cliente logado
-  document.querySelectorAll(".btn-suporte").forEach(a => a.addEventListener("click", () => {
-    const u = typeof Auth !== "undefined" && Auth.atual();
-    const corpo = "Olá, preciso de ajuda com:\n\n\n" + (u ? `---\nCliente: ${u.nome}\nE-mail da conta: ${u.email}` : "");
-    a.href = "mailto:igor.amorim@cultura.gov.br?subject=" + encodeURIComponent("Suporte STN Sneakers") + "&body=" + encodeURIComponent(corpo);
+  // E-mail de suporte: além de abrir o programa de e-mail, copia o endereço
+  document.querySelectorAll(".contato-email").forEach(a => a.addEventListener("click", () => {
+    const email = "igor.amorim@cultura.gov.br";
+    const copiado = () => aviso("E-mail de suporte copiado: " + email);
+    try { navigator.clipboard.writeText(email).then(copiado, () => {}); } catch (e) {}
   }));
 
   atualizarCabecalho();

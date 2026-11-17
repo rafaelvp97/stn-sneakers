@@ -120,16 +120,24 @@ img,svg{display:block;max-width:100%}
 
 /* Rodapé */
 .rodape{background:var(--preto);color:#ccc;margin-top:48px;padding:48px 0 24px}
-.rodape-grade{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
+.rodape-grade{display:grid;grid-template-columns:1.6fr 1fr 1fr 1.4fr;gap:32px}
 .rodape h4{color:#fff;margin-bottom:12px;font-size:1rem}
 .rodape ul{list-style:none;display:grid;gap:8px;font-size:.9rem}
 .rodape a:hover{color:#fff}
 .rodape .logo{color:#fff;display:inline-block;margin-bottom:10px}
-.contato-tel{font-weight:600;color:#fff}
-.btn-suporte{display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:var(--destaque);color:#fff;font-weight:700;padding:10px 20px;border-radius:999px;transition:background .2s}
-.btn-suporte:hover{background:#c92f3b;color:#fff!important}
-.btn-suporte svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
-.suporte-email{display:block;margin-top:8px;font-size:.8rem;color:#999;word-break:break-all}
+.contatos{gap:12px!important}
+.contato-linha{display:flex;align-items:flex-start;gap:10px;color:#ddd}
+.contato-linha svg{width:18px;height:18px;flex:none;margin-top:2px;fill:none;stroke:var(--destaque);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.contato-tel{font-weight:700;color:#fff;font-size:1rem}
+.contato-email span{display:grid;font-size:.9rem;overflow-wrap:anywhere}
+.contato-email small{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:#999;font-weight:700}
+.contato-email:hover span{text-decoration:underline}
+.redes{display:flex;gap:12px;margin-top:18px}
+.rede{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;transition:transform .2s,box-shadow .2s}
+.rede svg{width:26px;height:26px}
+.rede:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.whatsapp{background:#25d366}
+.instagram{background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285aeb 90%)}
 .rodape-base{border-top:1px solid #333;margin-top:32px;padding-top:20px;font-size:.85rem;text-align:center}
 
 /* Carrinho */
