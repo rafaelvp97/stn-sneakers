@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feminino | STN Sneakers</title>
+<meta name="description" content="STN Sneakers - Loja de tênis e chinelos femininos e masculinos.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="faixa">FRETE GRÁTIS acima de R$ 199 · Parcele em até 3x sem juros</div>
+<header class="topo">
+  <div class="container">
+    <a href="index.html" class="logo">STN <span>SNEAKERS</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <a href="feminino.html" class="ativo">Feminino</a>
+      <a href="masculino.html">Masculino</a>
+    </nav>
+    <div class="acoes">
+      <button class="btn-icone btn-carrinho" aria-label="Abrir carrinho">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg>
+        <span class="contador">0</span>
+      </button>
+      <button class="btn-icone btn-menu" aria-label="Abrir menu">
+        <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<main>
+<section class="titulo-pagina">
+  <div class="container"><h1>Feminino</h1><p>Tênis e chinelos femininos para todos os estilos</p></div>
+</section>
+<div class="container">
+  <div class="filtros">
+    <button class="filtro ativo" data-tipo="todos">Todos</button>
+    <button class="filtro" data-tipo="tenis">Tênis</button>
+    <button class="filtro" data-tipo="chinelo">Chinelos</button>
+    <button class="filtro" data-tipo="promo">Promoções</button>
+    <select class="ordenar" aria-label="Ordenar">
+      <option value="relevancia">Ordenar: Relevância</option>
+      <option value="menor">Menor preço</option>
+      <option value="maior">Maior preço</option>
+    </select>
+  </div>
+  <div class="grade" id="catalogo" data-genero="feminino"></div>
+</div>
+</main>
+<footer class="rodape">
+  <div class="container">
+    <div class="rodape-grade">
+      <div>
+        <a href="index.html" class="logo">STN <span>SNEAKERS</span></a>
+        <p>Tênis e chinelos com conforto e estilo para todos os momentos.</p>
+      </div>
+      <div>
+        <h4>Loja</h4>
+        <ul><li><a href="feminino.html">Feminino</a></li><li><a href="masculino.html">Masculino</a></li><li><a href="index.html#promocoes-sec">Promoções</a></li></ul>
+      </div>
+      <div>
+        <h4>Ajuda</h4>
+        <ul><li><a href="#">Trocas e devoluções</a></li><li><a href="#">Prazo de entrega</a></li><li><a href="#">Guia de tamanhos</a></li></ul>
+      </div>
+      <div>
+        <h4>Contato</h4>
+        <ul><li>(11) 99999-9999</li><li>contato@stnsneakers.com.br</li><li>Seg a Sex, 9h às 18h</li></ul>
+      </div>
+    </div>
+    <div class="rodape-base">© 2026 STN Sneakers · Todos os direitos reservados</div>
+  </div>
+</footer>
+
+<div class="sombra"></div>
+<aside class="carrinho" aria-label="Carrinho">
+  <div class="carrinho-topo"><strong>Seu carrinho</strong><button class="btn-icone fechar-carrinho" aria-label="Fechar">✕</button></div>
+  <div class="carrinho-itens"></div>
+  <div class="carrinho-base">
+    <div class="total"><span>Total</span><span class="total-valor">R$ 0,00</span></div>
+    <button class="btn btn-escuro finalizar">Finalizar compra</button>
+  </div>
+</aside>
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+  <div class="modal-caixa">
+    <button class="modal-fechar" aria-label="Fechar">✕</button>
+    <div class="etapa etapa-escolha">
+      <h2 id="modal-titulo">Tudo pronto?</h2>
+      <p>Você tem <strong class="modal-qtd"></strong> no carrinho, total de <strong class="modal-total"></strong>.</p>
+      <div class="modal-botoes">
+        <button class="btn btn-claro continuar">Continuar comprando</button>
+        <button class="btn btn-escuro ir-pagamento">Ir para o pagamento</button>
+      </div>
+    </div>
+    <div class="etapa etapa-pagamento" hidden>
+      <h2>Forma de pagamento</h2>
+      <p>Total: <strong class="modal-total"></strong></p>
+      <div class="pagamentos">
+        <label class="pag"><input type="radio" name="pag" value="pix" checked><span><b>Pix</b><small>Aprovação na hora</small></span></label>
+        <label class="pag"><input type="radio" name="pag" value="cartao"><span><b>Cartão de crédito</b><small>Até 3x sem juros</small></span></label>
+        <label class="pag"><input type="radio" name="pag" value="boleto"><span><b>Boleto</b><small>Vence em 3 dias úteis</small></span></label>
+      </div>
+      <div class="modal-botoes">
+        <button class="btn btn-claro voltar">Voltar</button>
+        <button class="btn btn-escuro confirmar">Confirmar pedido</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast"></div>
+<script src="js/produtos.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
