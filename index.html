@@ -33,21 +33,66 @@
   </div>
 </header>
 <main>
-<section class="banner">
-  <div class="container">
-    <div>
-      <h1>Pise com <em>estilo</em>.<br>Ande com conforto.</h1>
-      <p>Tênis e chinelos femininos e masculinos com até 30% OFF. Novidades toda semana.</p>
-      <div class="banner-botoes">
-        <a href="feminino.html" class="btn btn-escuro">Comprar Feminino</a>
-        <a href="masculino.html" class="btn btn-claro">Comprar Masculino</a>
+<section class="carrossel" aria-roledescription="carrossel" aria-label="Ofertas em destaque">
+  <div class="slides">
+    <div class="slide ativo" style="--fundo:#f4f4f4" role="group" aria-roledescription="slide" aria-label="1 de 3">
+      <div class="container">
+        <div class="slide-texto">
+          <span class="slide-etiqueta">Nova coleção</span>
+          <h1>Pise com <em>estilo</em>.<br>Ande com conforto.</h1>
+          <p>Tênis e chinelos femininos e masculinos com até 30% OFF. Novidades toda semana.</p>
+          <div class="banner-botoes">
+            <a href="feminino.html" class="btn btn-escuro">Comprar Feminino</a>
+            <a href="masculino.html" class="btn btn-claro">Comprar Masculino</a>
+          </div>
+        </div>
+        <div class="banner-arte" data-arte="tenis,#e63946,#ffffff"></div>
       </div>
     </div>
-    <div class="banner-arte" data-arte="tenis,#e63946,#ffffff"></div>
+    <div class="slide" style="--fundo:#fdf1e3" role="group" aria-roledescription="slide" aria-label="2 de 3" aria-hidden="true">
+      <div class="container">
+        <div class="slide-texto">
+          <span class="slide-etiqueta">Verão STN</span>
+          <h2 class="slide-titulo">Chinelos a partir de <em data-menor-preco="chinelo">R$ 39,90</em></h2>
+          <p>Conforto do dia a dia para a praia, a piscina ou a rua. Modelos femininos e masculinos.</p>
+          <div class="banner-botoes">
+            <a href="feminino.html?tipo=chinelo" class="btn btn-escuro" tabindex="-1">Chinelos Femininos</a>
+            <a href="masculino.html?tipo=chinelo" class="btn btn-claro" tabindex="-1">Chinelos Masculinos</a>
+          </div>
+        </div>
+        <div class="banner-arte arte-dupla"><div data-arte="chinelo,#ff70a6,#ffffff"></div><div data-arte="chinelo,#0077b6,#ffffff"></div></div>
+      </div>
+    </div>
+    <div class="slide escuro" style="--fundo:#14213d" role="group" aria-roledescription="slide" aria-label="3 de 3" aria-hidden="true">
+      <div class="container">
+        <div class="slide-texto">
+          <span class="slide-etiqueta">Semana do Tênis</span>
+          <h2 class="slide-titulo">Tênis com até <em data-maior-desconto="tenis">27% OFF</em></h2>
+          <p>Corrida, treino e casual com preço especial. Parcele em até 3x sem juros.</p>
+          <div class="banner-botoes">
+            <a href="#promocoes-sec" class="btn btn-destaque" tabindex="-1">Ver promoções</a>
+          </div>
+        </div>
+        <div class="banner-arte" data-arte="tenis,#ffffff,#e63946"></div>
+      </div>
+    </div>
+  </div>
+  <button class="seta ant" aria-label="Anúncio anterior">‹</button>
+  <button class="seta prox" aria-label="Próximo anúncio">›</button>
+  <div class="pontos" role="tablist" aria-label="Escolher anúncio">
+    <button class="ponto ativo" aria-label="Anúncio 1"></button>
+    <button class="ponto" aria-label="Anúncio 2"></button>
+    <button class="ponto" aria-label="Anúncio 3"></button>
   </div>
 </section>
 
 <div class="container">
+  <section class="news">
+    <h2>Ganhe 10% OFF na primeira compra</h2>
+    <p>Cadastre seu e-mail e receba ofertas exclusivas.</p>
+    <form><input type="email" placeholder="Seu melhor e-mail" aria-label="Seu e-mail" required><button class="btn btn-escuro">Quero desconto</button></form>
+  </section>
+
   <section class="categorias">
     <a href="feminino.html" class="cat fem"><div data-arte="tenis,#e5989b,#ffffff"></div><div><h3>Feminino</h3><span>Tênis e chinelos →</span></div></a>
     <a href="masculino.html" class="cat masc"><div data-arte="tenis,#1d3557,#f1faee"></div><div><h3>Masculino</h3><span>Tênis e chinelos →</span></div></a>
@@ -60,24 +105,19 @@
     <div class="grade" id="promocoes"></div>
   </section>
 
-  <section class="vantagens">
-    <div class="vantagem"><div class="ic">🚚</div><strong>Frete grátis</strong><span>Acima de R$ 199</span></div>
-    <div class="vantagem"><div class="ic">💳</div><strong>3x sem juros</strong><span>Em todo o site</span></div>
-    <div class="vantagem"><div class="ic">🔄</div><strong>Troca fácil</strong><span>Até 30 dias</span></div>
-    <div class="vantagem"><div class="ic">🔒</div><strong>Compra segura</strong><span>Site protegido</span></div>
-  </section>
-
   <section class="secao">
     <div class="secao-topo">
       <div><h2>⭐ Destaques</h2><p>Os modelos mais procurados da temporada</p></div>
     </div>
     <div class="grade" id="destaques"></div>
   </section>
-
-  <section class="news">
-    <h2>Ganhe 10% OFF na primeira compra</h2>
-    <p>Cadastre seu e-mail e receba ofertas exclusivas.</p>
-    <form><input type="email" placeholder="Seu melhor e-mail" required><button class="btn btn-escuro">Quero desconto</button></form>
+</div>
+<div class="container">
+  <section class="vantagens" aria-label="Vantagens">
+    <div class="vantagem"><div class="ic">🚚</div><strong>Frete grátis</strong><span>Acima de R$ 199</span></div>
+    <div class="vantagem"><div class="ic">💳</div><strong>3x sem juros</strong><span>Em todo o site</span></div>
+    <div class="vantagem"><div class="ic">🔄</div><strong>Troca fácil</strong><span>Até 30 dias</span></div>
+    <div class="vantagem"><div class="ic">🔒</div><strong>Compra segura</strong><span>Site protegido</span></div>
   </section>
 </div>
 </main>
@@ -98,7 +138,14 @@
       </div>
       <div>
         <h4>Contato</h4>
-        <ul><li>(11) 99999-9999</li><li>contato@stnsneakers.com.br</li><li>Seg a Sex, 9h às 18h</li></ul>
+        <ul>
+          <li><a href="tel:20242275" class="contato-tel">📞 2024-2275</a></li>
+          <li>Seg a Sex, 9h às 18h</li>
+        </ul>
+        <a href="mailto:igor.amorim@cultura.gov.br?subject=Suporte%20STN%20Sneakers" class="btn-suporte" target="_top">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Suporte
+        </a>
+        <small class="suporte-email">igor.amorim@cultura.gov.br</small>
       </div>
     </div>
     <div class="rodape-base">© 2026 STN Sneakers · Todos os direitos reservados</div>

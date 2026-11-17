@@ -95,6 +95,46 @@ function atualizarCabecalho() {
   document.querySelectorAll(".conta-nome").forEach(el => { el.textContent = u ? "Olá, " + u.nome.split(" ")[0] : "Entrar"; });
 }
 
+
+// ---------- Carrossel de anúncios ----------
+function iniciarCarrossel(raiz) {
+  const slides = [...raiz.querySelectorAll(".slide")], pontos = [...raiz.querySelectorAll(".ponto")];
+  const TEMPO = 5000;
+  let atual = 0, timer = null, pausado = false;
+  function ir(n) {
+    atual = (n + slides.length) % slides.length;
+    slides.forEach((s, i) => {
+      const ativo = i === atual;
+      s.classList.toggle("ativo", ativo);
+      s.setAttribute("aria-hidden", ativo ? "false" : "true");
+      s.querySelectorAll("a, button").forEach(el => ativo ? el.removeAttribute("tabindex") : el.setAttribute("tabindex", "-1"));
+    });
+    pontos.forEach((p, i) => { p.classList.toggle("ativo", i === atual); p.setAttribute("aria-selected", i === atual); });
+    raiz.classList.toggle("no-escuro", slides[atual].classList.contains("escuro"));
+  }
+  const parar = () => { clearInterval(timer); timer = null; };
+  const tocar = () => { parar(); if (!pausado && !document.hidden) timer = setInterval(() => ir(atual + 1), TEMPO); };
+  const manual = n => { ir(n); tocar(); };   // ao clicar, reinicia a contagem
+  raiz.querySelector(".prox").addEventListener("click", () => manual(atual + 1));
+  raiz.querySelector(".ant").addEventListener("click", () => manual(atual - 1));
+  pontos.forEach((p, i) => p.addEventListener("click", () => manual(i)));
+  // pausa enquanto o mouse está em cima ou algo dentro está em foco
+  raiz.addEventListener("mouseenter", () => { pausado = true; parar(); });
+  raiz.addEventListener("mouseleave", () => { pausado = false; tocar(); });
+  raiz.addEventListener("focusin", () => { pausado = true; parar(); });
+  raiz.addEventListener("focusout", () => { pausado = false; tocar(); });
+  document.addEventListener("visibilitychange", tocar);
+  // deslizar com o dedo no celular
+  let x0 = null;
+  raiz.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
+  raiz.addEventListener("touchend", e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 40) manual(atual + (dx < 0 ? 1 : -1));
+  });
+  ir(0); tocar();
+}
+
 // ---------- Inicialização ----------
 document.addEventListener("DOMContentLoaded", () => {
   // Página inicial
@@ -102,6 +142,15 @@ document.addEventListener("DOMContentLoaded", () => {
   if (promo) renderizar(promo, PRODUTOS.filter(p => p.precoAntigo).slice(0, 8));
   const dest = document.getElementById("destaques");
   if (dest) renderizar(dest, PRODUTOS.filter(p => p.destaque));
+  // Textos dos anúncios calculados a partir do catálogo (sempre corretos)
+  document.querySelectorAll("[data-menor-preco]").forEach(el => {
+    const precos = PRODUTOS.filter(p => p.tipo === el.dataset.menorPreco).map(p => p.preco);
+    if (precos.length) el.textContent = real(Math.min(...precos));
+  });
+  document.querySelectorAll("[data-maior-desconto]").forEach(el => {
+    const d = PRODUTOS.filter(p => p.tipo === el.dataset.maiorDesconto && p.precoAntigo).map(p => Math.round((1 - p.preco / p.precoAntigo) * 100));
+    if (d.length) el.textContent = Math.max(...d) + "% OFF";
+  });
   document.querySelectorAll("[data-arte]").forEach(el => {
     const [tipo, cor, sola] = el.dataset.arte.split(",");
     el.innerHTML = tipo === "chinelo" ? svgChinelo(cor, sola) : svgTenis(cor, sola);
@@ -220,6 +269,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const news = document.querySelector(".news form");
   if (news) news.addEventListener("submit", e => { e.preventDefault(); news.reset(); aviso("Cadastro realizado! Fique de olho no seu e-mail."); });
+
+  const carrossel = document.querySelector(".carrossel");
+  if (carrossel) iniciarCarrossel(carrossel);
+
+  // Botão Suporte: já preenche o e-mail com os dados do cliente logado
+  document.querySelectorAll(".btn-suporte").forEach(a => a.addEventListener("click", () => {
+    const u = typeof Auth !== "undefined" && Auth.atual();
+    const corpo = "Olá, preciso de ajuda com:\n\n\n" + (u ? `---\nCliente: ${u.nome}\nE-mail da conta: ${u.email}` : "");
+    a.href = "mailto:igor.amorim@cultura.gov.br?subject=" + encodeURIComponent("Suporte STN Sneakers") + "&body=" + encodeURIComponent(corpo);
+  }));
 
   atualizarCabecalho();
   atualizarCarrinho();
