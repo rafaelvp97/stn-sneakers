@@ -89,6 +89,12 @@ function aviso(txt) {
   clearTimeout(tempoAviso); tempoAviso = setTimeout(() => t.classList.remove("mostrar"), 2200);
 }
 
+// ---------- Cabeçalho: nome do cliente logado ----------
+function atualizarCabecalho() {
+  const u = typeof Auth !== "undefined" && Auth.atual();
+  document.querySelectorAll(".conta-nome").forEach(el => { el.textContent = u ? "Olá, " + u.nome.split(" ")[0] : "Entrar"; });
+}
+
 // ---------- Inicialização ----------
 document.addEventListener("DOMContentLoaded", () => {
   // Página inicial
@@ -138,32 +144,83 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelector(".sombra").addEventListener("click", () => abrirCarrinho(false));
   // Finalizar compra: pergunta se quer continuar comprando ou ir para o pagamento
   const modal = document.querySelector(".modal");
+  const totalCarrinho = () => carrinho.reduce((s, i) => s + PRODUTOS.find(p => p.id === i.id).preco * i.qtd, 0);
   const etapa = nome => {
     modal.querySelector(".etapa-escolha").hidden = nome !== "escolha";
     modal.querySelector(".etapa-pagamento").hidden = nome !== "pagamento";
+    if (nome === "pagamento") renderCheckoutExtra();
   };
   const fecharModal = () => modal.classList.remove("aberto");
+  function abrirFinalizacao(nomeEtapa) {
+    const qtd = carrinho.reduce((s, i) => s + i.qtd, 0);
+    modal.querySelector(".modal-qtd").textContent = qtd + (qtd === 1 ? " item" : " itens");
+    modal.querySelectorAll(".modal-total").forEach(el => el.textContent = real(totalCarrinho()));
+    etapa(nomeEtapa); modal.classList.add("aberto");
+  }
+  const formaPag = () => modal.querySelector("input[name=pag]:checked").value;
+  const enderecoTexto = e => e && e.rua ? `${e.rua}, ${e.numero}${e.complemento ? " - " + e.complemento : ""} · ${e.bairro}, ${e.cidade}/${e.estado}` : "";
+  const escHtml = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Endereço de entrega e cartão salvo dentro da etapa de pagamento
+  function renderCheckoutExtra() {
+    const u = Auth.atual(), el = modal.querySelector(".checkout-extra");
+    if (!u) { el.innerHTML = ""; return; }
+    const end = enderecoTexto(u.endereco);
+    let html = `<div class="extra-bloco"><span class="extra-rotulo">Entregar em</span>` + (end
+      ? `<p>${escHtml(end)}</p><a href="conta.html?sec=endereco&voltar=pagamento">Alterar</a>`
+      : `<p class="extra-alerta">Nenhum endereço cadastrado.</p><a href="conta.html?sec=endereco&voltar=pagamento">Cadastrar endereço</a>`) + `</div>`;
+    if (formaPag() === "cartao") {
+      html += `<div class="extra-bloco"><span class="extra-rotulo">Cartão</span>` + (u.cartoes.length
+        ? `<select class="sel-cartao" aria-label="Escolha o cartão">${u.cartoes.map(c => `<option value="${c.id}">${escHtml(c.bandeira)} •••• ${escHtml(c.final)}</option>`).join("")}</select>`
+        : `<p class="extra-alerta">Nenhum cartão cadastrado.</p>`) +
+        `<a href="conta.html?sec=cartoes&voltar=pagamento">${u.cartoes.length ? "Adicionar outro" : "Cadastrar cartão"}</a></div>`;
+    }
+    el.innerHTML = html;
+  }
+  modal.querySelectorAll("input[name=pag]").forEach(r => r.addEventListener("change", renderCheckoutExtra));
+
   document.querySelector(".finalizar").addEventListener("click", () => {
     if (!carrinho.length) return aviso("Adicione produtos ao carrinho.");
-    const qtd = carrinho.reduce((s, i) => s + i.qtd, 0);
-    const total = carrinho.reduce((s, i) => s + PRODUTOS.find(p => p.id === i.id).preco * i.qtd, 0);
-    modal.querySelector(".modal-qtd").textContent = qtd + (qtd === 1 ? " item" : " itens");
-    modal.querySelectorAll(".modal-total").forEach(el => el.textContent = real(total));
-    etapa("escolha"); modal.classList.add("aberto");
+    abrirFinalizacao("escolha");
   });
   modal.querySelector(".continuar").addEventListener("click", () => { fecharModal(); abrirCarrinho(false); });
-  modal.querySelector(".ir-pagamento").addEventListener("click", () => etapa("pagamento"));
+  modal.querySelector(".ir-pagamento").addEventListener("click", () => {
+    if (!Auth.atual()) { location.href = "conta.html?voltar=pagamento"; return; }
+    etapa("pagamento");
+  });
   modal.querySelector(".voltar").addEventListener("click", () => etapa("escolha"));
   modal.querySelector(".modal-fechar").addEventListener("click", fecharModal);
   modal.addEventListener("click", e => { if (e.target === modal) fecharModal(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") fecharModal(); });
   modal.querySelector(".confirmar").addEventListener("click", () => {
-    const forma = modal.querySelector("input[name=pag]:checked").closest(".pag").querySelector("b").textContent;
+    const u = Auth.atual();
+    if (!u) { location.href = "conta.html?voltar=pagamento"; return; }
+    if (!u.endereco || !u.endereco.rua) return aviso("Cadastre um endereço de entrega.");
+    const forma = formaPag();
+    let pagamento = { pix: "Pix", boleto: "Boleto" }[forma];
+    if (forma === "cartao") {
+      const c = u.cartoes.find(x => x.id === modal.querySelector(".sel-cartao")?.value);
+      if (!c) return aviso("Cadastre um cartão para pagar com crédito.");
+      pagamento = `Cartão ${c.bandeira} •••• ${c.final}`;
+    }
+    const pedido = {
+      numero: String(Date.now()).slice(-6), data: new Date().toISOString(),
+      itens: carrinho.map(i => { const p = PRODUTOS.find(x => x.id === i.id); return { id: p.id, nome: p.nome, preco: p.preco, qtd: i.qtd }; }),
+      total: totalCarrinho(), pagamento, endereco: enderecoTexto(u.endereco),
+      status: forma === "boleto" ? "Aguardando pagamento" : "Pagamento aprovado"
+    };
+    Auth.atualizar(x => { x.pedidos.unshift(pedido); });
     carrinho = []; salvar(); atualizarCarrinho(); fecharModal(); abrirCarrinho(false);
-    aviso("Pedido confirmado! Pagamento via " + forma + " 🎉");
+    aviso(`Pedido #${pedido.numero} confirmado! Veja em Meus Pedidos 🎉`);
   });
+  // Voltando do login/cadastro direto para o pagamento
+  if (location.hash === "#pagamento") {
+    history.replaceState(null, "", location.pathname + location.search);
+    if (carrinho.length && Auth.atual()) { abrirCarrinho(true); abrirFinalizacao("pagamento"); }
+  }
   const news = document.querySelector(".news form");
   if (news) news.addEventListener("submit", e => { e.preventDefault(); news.reset(); aviso("Cadastro realizado! Fique de olho no seu e-mail."); });
 
+  atualizarCabecalho();
   atualizarCarrinho();
 });
