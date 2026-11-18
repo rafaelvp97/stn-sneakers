@@ -24,3 +24,16 @@ Abra o `index.html` no navegador.
 Para cadastrar ou alterar produtos, edite `js/produtos.js`:
 - `precoAntigo` preenchido coloca o produto em **Promoções**
 - `destaque: true` coloca o produto em **Destaques**
+
+## Como adicionar fotos a um produto
+1. Coloque as fotos em `img/produtos/` (de preferência JPG com até ~1000px de largura).
+2. No produto em `js/produtos.js`, acrescente a lista `imagens`:
+   ```js
+   imagens: [
+     { src: "img/produtos/meu-tenis-1.jpg", alt: "Descrição da foto", foco: "50% 60%" },
+     { src: "img/produtos/meu-tenis-2.jpg", alt: "Outra posição" }
+   ]
+   ```
+   - A 1ª foto aparece no cartão e a 2ª ao passar o mouse.
+   - `foco` ajusta qual parte da foto aparece no recorte quadrado do cartão (horizontal vertical).
+3. Use `lancamento: true` para o produto aparecer em **Lançamentos** com o selo.

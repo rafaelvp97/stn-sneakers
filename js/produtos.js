@@ -1,6 +1,17 @@
 // Catálogo de produtos. Para adicionar itens, basta incluir novos objetos aqui.
 // precoAntigo preenchido = produto em promoção | destaque: true = aparece em "Destaques"
+// lancamento: true = aparece em "Lançamentos" com selo | imagens: lista de fotos (opcional; sem fotos usa o desenho)
 const PRODUTOS = [
+  // Lançamento com fotos reais. "imagens": a 1ª aparece no cartão e a 2ª ao passar o mouse.
+  { id: 17, nome: "Tênis Plataforma Panda",  genero: "feminino",  tipo: "tenis",   preco: 299.90, precoAntigo: null,   destaque: true,  lancamento: true,
+    cor: "#111111", sola: "#ffffff",
+    descricao: "Tênis plataforma feminino em preto e branco, com solado alto e cadarço largo. Lançamento da temporada.",
+    imagens: [
+      { src: "img/produtos/plataforma-panda-1.jpg", alt: "Tênis Plataforma Panda calçado, vista lateral", foco: "50% 62%" },
+      { src: "img/produtos/plataforma-panda-2.jpg", alt: "Tênis Plataforma Panda na mão, vista lateral", foco: "50% 70%" },
+      { src: "img/produtos/plataforma-panda-3.jpg", alt: "Par do Tênis Plataforma Panda visto de cima", foco: "50% 55%" }
+    ] },
+
   { id: 1,  nome: "Tênis Runner Pro",        genero: "masculino", tipo: "tenis",   preco: 299.90, precoAntigo: 399.90, destaque: true,  cor: "#1d3557", sola: "#f1faee" },
   { id: 2,  nome: "Tênis Street Classic",    genero: "masculino", tipo: "tenis",   preco: 249.90, precoAntigo: null,   destaque: true,  cor: "#111111", sola: "#ffffff" },
   { id: 3,  nome: "Tênis Urban Flex",        genero: "masculino", tipo: "tenis",   preco: 189.90, precoAntigo: 259.90, destaque: false, cor: "#6c757d", sola: "#212529" },

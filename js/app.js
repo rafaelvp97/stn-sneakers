@@ -19,17 +19,28 @@ function svgChinelo(cor, sola) {
   </svg>`;
 }
 const arte = p => p.tipo === "chinelo" ? svgChinelo(p.cor, p.sola) : svgTenis(p.cor, p.sola);
+const temFoto = p => Array.isArray(p.imagens) && p.imagens.length > 0;
+// Miniatura: foto do produto quando existir, senão o desenho
+const miniatura = p => temFoto(p)
+  ? `<img src="${p.imagens[0].src}" alt="${p.imagens[0].alt || p.nome}" loading="lazy" style="object-position:${p.imagens[0].foco || "50% 50%"}">`
+  : arte(p);
 const real = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 // ---------- Cartões ----------
 function cartao(p) {
   const desconto = p.precoAntigo ? Math.round((1 - p.preco / p.precoAntigo) * 100) : 0;
-  const selo = desconto ? `<span class="selo">-${desconto}%</span>` : (p.destaque ? `<span class="selo novo">Destaque</span>` : "");
+  const selo = desconto ? `<span class="selo">-${desconto}%</span>`
+    : p.lancamento ? `<span class="selo lanc">Lançamento</span>`
+    : (p.destaque ? `<span class="selo novo">Destaque</span>` : "");
+  const imagem = temFoto(p)
+    ? p.imagens.slice(0, 2).map((f, i) => `<img src="${f.src}" alt="${i ? "" : (f.alt || p.nome)}" loading="lazy" class="${i ? "foto-2" : "foto-1"}" style="object-position:${f.foco || "50% 50%"}">`).join("")
+      + (p.imagens.length > 1 ? `<span class="qtd-fotos">${p.imagens.length} fotos</span>` : "")
+    : arte(p);
   return `<article class="card">
-    <div class="card-img">${selo}${arte(p)}</div>
+    <button class="card-img${temFoto(p) ? " com-foto" : ""}" data-ver="${p.id}" aria-label="Ver detalhes de ${p.nome}">${selo}${imagem}</button>
     <div class="card-corpo">
       <span class="card-tipo">${p.tipo === "tenis" ? "Tênis" : "Chinelo"} · ${p.genero === "feminino" ? "Feminino" : "Masculino"}</span>
-      <h3 class="card-nome">${p.nome}</h3>
+      <h3 class="card-nome"><button class="link-nome" data-ver="${p.id}">${p.nome}</button></h3>
       <div class="precos">
         ${p.precoAntigo ? `<span class="preco-antigo">${real(p.precoAntigo)}</span>` : ""}
         <span class="preco">${real(p.preco)}</span>
@@ -38,6 +49,76 @@ function cartao(p) {
       <button class="btn-add" data-id="${p.id}">Adicionar<span class="longo"> ao carrinho</span></button>
     </div>
   </article>`;
+}
+
+// ---------- Visualização do produto (galeria de fotos) ----------
+let produtoAberto = null, fotoAtual = 0;
+function criarVisualizacao() {
+  document.body.insertAdjacentHTML("beforeend", `
+  <div class="ver-produto" role="dialog" aria-modal="true" aria-labelledby="vp-nome">
+    <div class="vp-caixa">
+      <button class="vp-fechar" aria-label="Fechar">✕</button>
+      <div class="vp-galeria">
+        <div class="vp-principal"></div>
+        <button class="vp-seta ant" aria-label="Foto anterior">‹</button>
+        <button class="vp-seta prox" aria-label="Próxima foto">›</button>
+        <div class="vp-miniaturas"></div>
+      </div>
+      <div class="vp-info">
+        <span class="card-tipo vp-tipo"></span>
+        <h2 id="vp-nome"></h2>
+        <div class="precos vp-precos"></div>
+        <span class="parcela vp-parcela"></span>
+        <p class="vp-desc"></p>
+        <button class="btn btn-escuro vp-add">Adicionar ao carrinho</button>
+      </div>
+    </div>
+  </div>`);
+  const vp = document.querySelector(".ver-produto");
+  const fechar = () => vp.classList.remove("aberto");
+  vp.querySelector(".vp-fechar").addEventListener("click", fechar);
+  vp.addEventListener("click", e => { if (e.target === vp) fechar(); });
+  document.addEventListener("keydown", e => {
+    if (!vp.classList.contains("aberto")) return;
+    if (e.key === "Escape") fechar();
+    if (e.key === "ArrowRight") mostrarFoto(fotoAtual + 1);
+    if (e.key === "ArrowLeft") mostrarFoto(fotoAtual - 1);
+  });
+  vp.querySelector(".vp-seta.prox").addEventListener("click", () => mostrarFoto(fotoAtual + 1));
+  vp.querySelector(".vp-seta.ant").addEventListener("click", () => mostrarFoto(fotoAtual - 1));
+  vp.querySelector(".vp-miniaturas").addEventListener("click", e => { const b = e.target.closest("[data-foto]"); if (b) mostrarFoto(+b.dataset.foto); });
+  vp.querySelector(".vp-add").addEventListener("click", () => { adicionar(produtoAberto.id); fechar(); });
+  let x0 = null;
+  const gal = vp.querySelector(".vp-principal");
+  gal.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
+  gal.addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 40) mostrarFoto(fotoAtual + (dx < 0 ? 1 : -1)); });
+}
+function mostrarFoto(n) {
+  const p = produtoAberto, vp = document.querySelector(".ver-produto");
+  if (!temFoto(p)) { vp.querySelector(".vp-principal").innerHTML = arte(p); return; }
+  fotoAtual = (n + p.imagens.length) % p.imagens.length;
+  const f = p.imagens[fotoAtual];
+  vp.querySelector(".vp-principal").innerHTML = `<img src="${f.src}" alt="${f.alt || p.nome}">`;
+  vp.querySelectorAll("[data-foto]").forEach(b => b.classList.toggle("ativo", +b.dataset.foto === fotoAtual));
+}
+function abrirProduto(id) {
+  const p = PRODUTOS.find(x => x.id === id); if (!p) return;
+  if (!document.querySelector(".ver-produto")) criarVisualizacao();
+  produtoAberto = p; fotoAtual = 0;
+  const vp = document.querySelector(".ver-produto"), varias = temFoto(p) && p.imagens.length > 1;
+  vp.querySelector(".vp-tipo").textContent = `${p.tipo === "tenis" ? "Tênis" : "Chinelo"} · ${p.genero === "feminino" ? "Feminino" : "Masculino"}${p.lancamento ? " · Lançamento" : ""}`;
+  vp.querySelector("#vp-nome").textContent = p.nome;
+  vp.querySelector(".vp-precos").innerHTML = (p.precoAntigo ? `<span class="preco-antigo">${real(p.precoAntigo)}</span>` : "") + `<span class="preco">${real(p.preco)}</span>`;
+  vp.querySelector(".vp-parcela").textContent = `ou 3x de ${real(p.preco / 3)} sem juros`;
+  vp.querySelector(".vp-desc").textContent = p.descricao || "";
+  vp.querySelector(".vp-desc").hidden = !p.descricao;
+  vp.querySelectorAll(".vp-seta").forEach(b => b.hidden = !varias);
+  vp.querySelector(".vp-miniaturas").innerHTML = varias
+    ? p.imagens.map((f, i) => `<button data-foto="${i}" aria-label="Foto ${i + 1}"><img src="${f.src}" alt="" style="object-position:${f.foco || "50% 50%"}"></button>`).join("") : "";
+  vp.querySelector(".vp-galeria").classList.toggle("com-foto", temFoto(p));
+  mostrarFoto(0);
+  vp.classList.add("aberto");
+  vp.querySelector(".vp-fechar").focus();
 }
 function renderizar(el, lista) {
   el.innerHTML = lista.length ? lista.map(cartao).join("") : `<p class="vazio">Nenhum produto encontrado.</p>`;
@@ -70,7 +151,7 @@ function atualizarCarrinho() {
     const p = PRODUTOS.find(x => x.id === i.id);
     total += p.preco * i.qtd;
     return `<div class="item">
-      <div class="item-img">${arte(p)}</div>
+      <div class="item-img">${miniatura(p)}</div>
       <div><div class="item-nome">${p.nome}</div><div>${real(p.preco)}</div>
         <div class="qtd"><button data-menos="${p.id}" aria-label="Diminuir">−</button>${i.qtd}<button data-mais="${p.id}" aria-label="Aumentar">+</button></div></div>
       <button class="remover" data-remover="${p.id}">Remover</button>
@@ -140,6 +221,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // Página inicial
   const promo = document.getElementById("promocoes");
   if (promo) renderizar(promo, PRODUTOS.filter(p => p.precoAntigo).slice(0, 8));
+  const lanc = document.getElementById("lancamentos");
+  if (lanc) {
+    const lista = PRODUTOS.filter(p => p.lancamento);
+    lanc.closest("section").hidden = !lista.length;
+    renderizar(lanc, lista);
+  }
   const dest = document.getElementById("destaques");
   if (dest) renderizar(dest, PRODUTOS.filter(p => p.destaque));
   // Textos dos anúncios calculados a partir do catálogo (sempre corretos)
@@ -162,11 +249,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const genero = cat.dataset.genero;
     let tipo = "todos", ordem = "relevancia";
     const atualizar = () => {
-      let lista = PRODUTOS.filter(p => p.genero === genero && (tipo === "todos" || (tipo === "promo" ? p.precoAntigo : p.tipo === tipo)));
+      let lista = PRODUTOS.filter(p => p.genero === genero && (tipo === "todos" ||
+        (tipo === "promo" ? p.precoAntigo : tipo === "lancamento" ? p.lancamento : p.tipo === tipo)));
       if (ordem === "menor") lista.sort((a, b) => a.preco - b.preco);
       if (ordem === "maior") lista.sort((a, b) => b.preco - a.preco);
       renderizar(cat, lista);
     };
+    // esconde o filtro "Lançamentos" quando não há lançamentos nesta página
+    const fl = document.querySelector('.filtro[data-tipo="lancamento"]');
+    if (fl) fl.hidden = !PRODUTOS.some(p => p.genero === genero && p.lancamento);
     document.querySelectorAll(".filtro").forEach(b => b.addEventListener("click", () => {
       document.querySelectorAll(".filtro").forEach(x => x.classList.remove("ativo"));
       b.classList.add("ativo"); tipo = b.dataset.tipo; atualizar();
@@ -184,6 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const t = e.target.closest("button");
     if (!t) return;
     if (t.dataset.id) adicionar(+t.dataset.id);
+    if (t.dataset.ver) abrirProduto(+t.dataset.ver);
     if (t.dataset.mais) alterar(+t.dataset.mais, 1);
     if (t.dataset.menos) alterar(+t.dataset.menos, -1);
     if (t.dataset.remover) alterar(+t.dataset.remover, -Infinity);

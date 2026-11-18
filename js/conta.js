@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </header>
         <ul class="pedido-itens">${p.itens.map(i => {
           const prod = PRODUTOS.find(x => x.id === i.id);
-          return `<li>${prod ? `<span class="mini">${arte(prod)}</span>` : ""}<span>${i.qtd}× ${esc(i.nome)}</span><span>${real(i.preco * i.qtd)}</span></li>`;
+          return `<li>${prod ? `<span class="mini">${miniatura(prod)}</span>` : ""}<span>${i.qtd}× ${esc(i.nome)}</span><span>${real(i.preco * i.qtd)}</span></li>`;
         }).join("")}</ul>
         <footer class="pedido-base">
           <span>${esc(p.pagamento)}${p.endereco ? ` · Entrega: ${esc(p.endereco)}` : ""}</span>
