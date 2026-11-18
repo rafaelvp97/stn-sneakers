@@ -3,6 +3,21 @@
 // lancamento: true = aparece em "Lançamentos" com selo | imagens: lista de fotos (opcional; sem fotos usa o desenho)
 const PRODUTOS = [
   // Lançamento com fotos reais. "imagens": a 1ª aparece no cartão e a 2ª ao passar o mouse.
+  { id: 18, nome: "Tênis Runner Black Rosé", genero: "feminino", tipo: "tenis", preco: 299.90, precoAntigo: null, destaque: false, lancamento: true,
+    cor: "#111111", sola: "#f5efe6",
+    descricao: "Tênis feminino para corrida e treino, preto com detalhes em rosa e solado alto off-white.",
+    imagens: [
+      { src: "img/produtos/running-rose-1.jpg", alt: "Tênis Runner Black Rosé na mão, vista lateral", foco: "50% 48%" },
+      { src: "img/produtos/running-rose-2.jpg", alt: "Tênis Runner Black Rosé calçado, visto de cima", foco: "50% 43%" },
+      { src: "img/produtos/running-rose-3.jpg", alt: "Par do Tênis Runner Black Rosé ao lado da caixa", foco: "50% 77%" }
+    ] },
+  { id: 19, nome: "Tênis Retrô Bordô", genero: "feminino", tipo: "tenis", preco: 299.90, precoAntigo: null, destaque: false, lancamento: true,
+    cor: "#7b1e3a", sola: "#c8a06a",
+    descricao: "Tênis retrô feminino bordô com listras rosa e solado caramelo.",
+    imagens: [
+      { src: "img/produtos/retro-bordo-2.jpg", alt: "Par do Tênis Retrô Bordô na mão", foco: "50% 74%" },
+      { src: "img/produtos/retro-bordo-1.jpg", alt: "Tênis Retrô Bordô calçado", foco: "50% 87%" }
+    ] },
   { id: 17, nome: "Tênis Plataforma Panda",  genero: "feminino",  tipo: "tenis",   preco: 299.90, precoAntigo: null,   destaque: true,  lancamento: true,
     cor: "#111111", sola: "#ffffff",
     descricao: "Tênis plataforma feminino em preto e branco, com solado alto e cadarço largo. Lançamento da temporada.",
