@@ -143,6 +143,37 @@ button.card-img{border:0;width:100%;cursor:zoom-in;font:inherit;overflow:hidden}
 .genero-topo{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--borda)}
 .genero-topo h3{font-size:1.15rem;text-transform:uppercase;letter-spacing:1.5px}
 .genero-topo .ver-mais{font-size:.9rem}
+/* Pix e tamanhos */
+.preco-pix{font-size:.88rem;color:#1e7b3c}
+.preco-pix b{font-size:1rem}
+.tag-pix,.pag .tag-pix{display:inline-block;margin-left:4px;background:#e3f6e8;color:#1e7b3c;font-size:.7rem;font-weight:800;padding:1px 6px;border-radius:999px;vertical-align:middle}
+.card-tams{font-size:.78rem;color:var(--suave);font-weight:600}
+.vp-rotulo{font-weight:700;font-size:.9rem;display:block;margin-bottom:8px}
+.vp-rotulo small{font-weight:600;color:var(--suave)}
+.tams{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:8px}
+.tams button{height:44px;border:2px solid var(--borda);border-radius:10px;background:#fff;color:var(--texto);font-weight:700;cursor:pointer;transition:border-color .15s,background .15s}
+.tams button:hover{border-color:var(--preto)}
+.tams button.ativo{background:var(--preto);border-color:var(--preto);color:#fff}
+.vp-tam-erro{color:#b3261e;font-weight:600;font-size:.88rem;margin-top:8px}
+.vp-tamanhos{margin:4px 0 14px}
+.item-tam{font-size:.8rem;color:var(--suave);font-weight:600}
+.resumo .linha{display:flex;justify-content:space-between;gap:12px}
+.resumo .desconto{color:#1e7b3c;font-weight:600}
+.resumo .total-final{font-weight:800;font-size:1rem;border-top:1px solid #ddd;padding-top:6px;margin-top:2px}
+.pix-bloco{display:grid;gap:12px;justify-items:center;text-align:center}
+.pix-demo{background:#fff4d6;color:#8a5a00!important;border-radius:8px;padding:10px 12px;font-size:.85rem;font-weight:600;margin:0!important}
+.pix-qr{width:min(240px,70vw);background:#fff;border:1px solid var(--borda);border-radius:12px;padding:8px}
+.pix-qr svg{width:100%;height:auto;display:block}
+.pix-valor{margin:0!important;color:var(--texto)!important}
+.pix-copia{display:grid;gap:6px;width:100%;font-weight:600;font-size:.85rem;text-align:left}
+.pix-copia textarea{width:100%;font:inherit;font-family:ui-monospace,Consolas,monospace;font-size:.75rem;padding:10px;border:2px solid var(--borda);border-radius:10px;resize:none;color:#111;background:var(--cinza);word-break:break-all}
+.pix-copiar{width:100%}
+.pix-passos{font-size:.82rem;margin:0!important}
+.pix-ver-pedidos{width:100%;text-align:center;margin-top:12px}
+.tam-ped{color:var(--suave);font-weight:600}
+.desc-ped{display:block;font-size:.8rem;color:#1e7b3c;font-weight:600;text-align:right}
+.pedido-pix{padding:0 18px 18px;display:grid;gap:14px;justify-items:start}
+.pedido-pix .pix-area{width:100%;max-width:360px}
 .vazio{text-align:center;color:var(--suave);padding:40px 0;grid-column:1/-1}
 
 /* Vantagens */
@@ -321,6 +352,7 @@ input:-webkit-autofill{-webkit-text-fill-color:#111;box-shadow:0 0 0 1000px #fff
 }
 /* ===== Celular ===== */
 @media (max-width:540px){
+  .tams{grid-template-columns:repeat(5,1fr)}
   .categorias{grid-template-columns:1fr;gap:14px}
   .cat{min-height:170px}
   .card-corpo{padding:12px}

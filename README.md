@@ -37,3 +37,27 @@ Para cadastrar ou alterar produtos, edite `js/produtos.js`:
    - A 1ª foto aparece no cartão e a 2ª ao passar o mouse.
    - `foco` ajusta qual parte da foto aparece no recorte quadrado do cartão (horizontal vertical).
 3. Use `lancamento: true` para o produto aparecer em **Lançamentos** com o selo.
+
+## Pagamento via Pix (5% de desconto)
+O Pix gera o QR Code e o "Pix copia e cola" no padrão BR Code do Banco Central, já com o valor do pedido com 5% de desconto.
+
+**Para receber de verdade**, abra `js/pix.js` e preencha:
+```js
+const PIX_CONFIG = {
+  chave: "sua-chave-pix",   // CPF, CNPJ, e-mail, telefone (+5561...) ou chave aleatória
+  nome: "STN SNEAKERS",     // nome do recebedor (até 25 letras, sem acento)
+  cidade: "BRASILIA",       // cidade do recebedor (até 15 letras, sem acento)
+  desconto: 0.05
+};
+```
+Enquanto a chave estiver vazia, o site mostra um aviso de **QR Code de demonstração**.
+O site não confirma o pagamento sozinho: os pedidos Pix ficam como "Aguardando pagamento".
+Para confirmação automática é preciso a API Pix de um banco ou de um intermediário (Mercado Pago, PagSeguro etc.).
+
+## Numerações
+- Feminino: 34 ao 39
+- Masculino: 34 ao 43
+
+O cliente escolhe o tamanho antes de colocar no carrinho. Para um produto ter numeração diferente, use `tamanhos: [38, 39, 40]` nele em `js/produtos.js`.
+
+O QR Code usa a biblioteca [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (licença MIT), copiada em `js/vendor/qrcode.js`.

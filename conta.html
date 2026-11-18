@@ -216,7 +216,7 @@
       <h2>Forma de pagamento</h2>
       <p>Total: <strong class="modal-total"></strong></p>
       <div class="pagamentos">
-        <label class="pag"><input type="radio" name="pag" value="pix" checked><span><b>Pix</b><small>Aprovação na hora</small></span></label>
+        <label class="pag"><input type="radio" name="pag" value="pix" checked><span><b>Pix <span class="tag-pix">5% OFF</span></b><small>Pague com QR Code ou copia e cola</small></span></label>
         <label class="pag"><input type="radio" name="pag" value="cartao"><span><b>Cartão de crédito</b><small>Até 3x sem juros</small></span></label>
         <label class="pag"><input type="radio" name="pag" value="boleto"><span><b>Boleto</b><small>Vence em 3 dias úteis</small></span></label>
       </div>
@@ -229,6 +229,8 @@
   </div>
 </div>
 <div class="toast"></div>
+<script src="js/vendor/qrcode.js"></script>
+<script src="js/pix.js"></script>
 <script src="js/produtos.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>

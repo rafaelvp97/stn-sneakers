@@ -140,14 +140,25 @@ document.addEventListener("DOMContentLoaded", () => {
         </header>
         <ul class="pedido-itens">${p.itens.map(i => {
           const prod = PRODUTOS.find(x => x.id === i.id);
-          return `<li>${prod ? `<span class="mini">${miniatura(prod)}</span>` : ""}<span>${i.qtd}× ${esc(i.nome)}</span><span>${real(i.preco * i.qtd)}</span></li>`;
+          return `<li>${prod ? `<span class="mini">${miniatura(prod)}</span>` : ""}<span>${i.qtd}× ${esc(i.nome)}${i.tamanho ? ` <small class="tam-ped">Tam. ${esc(i.tamanho)}</small>` : ""}</span><span>${real(i.preco * i.qtd)}</span></li>`;
         }).join("")}</ul>
         <footer class="pedido-base">
           <span>${esc(p.pagamento)}${p.endereco ? ` · Entrega: ${esc(p.endereco)}` : ""}</span>
-          <strong>Total ${real(p.total)}</strong>
+          <strong>${p.desconto ? `<small class="desc-ped">Desconto Pix −${real(p.desconto)}</small>` : ""}Total ${real(p.total)}</strong>
         </footer>
+        ${p.pix && p.status === "Aguardando pagamento" ? `<div class="pedido-pix">
+          <button type="button" class="btn btn-escuro btn-ver-pix" aria-expanded="false">Ver QR Code do Pix</button>
+          <div class="pix-area" hidden>${blocoPix(p.pix, p.total)}</div>
+        </div>` : ""}
       </article>`).join("");
   }
+
+  document.querySelector(".lista-pedidos").addEventListener("click", e => {
+    const b = e.target.closest(".btn-ver-pix"); if (!b) return;
+    const area = b.nextElementSibling, abrir = area.hidden;
+    area.hidden = !abrir; b.setAttribute("aria-expanded", abrir);
+    b.textContent = abrir ? "Esconder QR Code" : "Ver QR Code do Pix";
+  });
 
   function renderCartoes() {
     const u = Auth.atual(), el = document.querySelector(".lista-cartoes");

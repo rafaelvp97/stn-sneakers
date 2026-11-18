@@ -19,6 +19,11 @@ function svgChinelo(cor, sola) {
   </svg>`;
 }
 const arte = p => p.tipo === "chinelo" ? svgChinelo(p.cor, p.sola) : svgTenis(p.cor, p.sola);
+// Numerações: feminino 34 a 39, masculino 34 a 43 (um produto pode ter "tamanhos" próprios)
+const faixa = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+const tamanhos = p => p.tamanhos || (p.genero === "feminino" ? faixa(34, 39) : faixa(34, 43));
+const textoTamanhos = p => { const t = tamanhos(p); return `Tam. ${t[0]} ao ${t[t.length - 1]}`; };
+const precoPix = p => Pix.comDesconto(p.preco);
 const temFoto = p => Array.isArray(p.imagens) && p.imagens.length > 0;
 // Miniatura: foto do produto quando existir, senão o desenho
 const miniatura = p => temFoto(p)
@@ -45,14 +50,16 @@ function cartao(p) {
         ${p.precoAntigo ? `<span class="preco-antigo">${real(p.precoAntigo)}</span>` : ""}
         <span class="preco">${real(p.preco)}</span>
       </div>
+      <span class="preco-pix"><b>${real(precoPix(p))}</b> no Pix <span class="tag-pix">-5%</span></span>
       <span class="parcela">ou 3x de ${real(p.preco / 3)} sem juros</span>
-      <button class="btn-add" data-id="${p.id}">Adicionar<span class="longo"> ao carrinho</span></button>
+      <span class="card-tams">${textoTamanhos(p)}</span>
+      <button class="btn-add" data-ver="${p.id}">Escolher tamanho</button>
     </div>
   </article>`;
 }
 
 // ---------- Visualização do produto (galeria de fotos) ----------
-let produtoAberto = null, fotoAtual = 0;
+let produtoAberto = null, fotoAtual = 0, tamanhoEscolhido = null;
 function criarVisualizacao() {
   document.body.insertAdjacentHTML("beforeend", `
   <div class="ver-produto" role="dialog" aria-modal="true" aria-labelledby="vp-nome">
@@ -68,8 +75,14 @@ function criarVisualizacao() {
         <span class="card-tipo vp-tipo"></span>
         <h2 id="vp-nome"></h2>
         <div class="precos vp-precos"></div>
+        <span class="preco-pix vp-pix"></span>
         <span class="parcela vp-parcela"></span>
         <p class="vp-desc"></p>
+        <div class="vp-tamanhos">
+          <span class="vp-rotulo">Tamanho <small class="vp-tam-escolhido"></small></span>
+          <div class="tams" role="radiogroup" aria-label="Escolha o tamanho"></div>
+          <p class="vp-tam-erro" hidden>⚠ Escolha o tamanho antes de adicionar.</p>
+        </div>
         <button class="btn btn-escuro vp-add">Adicionar ao carrinho</button>
       </div>
     </div>
@@ -87,7 +100,21 @@ function criarVisualizacao() {
   vp.querySelector(".vp-seta.prox").addEventListener("click", () => mostrarFoto(fotoAtual + 1));
   vp.querySelector(".vp-seta.ant").addEventListener("click", () => mostrarFoto(fotoAtual - 1));
   vp.querySelector(".vp-miniaturas").addEventListener("click", e => { const b = e.target.closest("[data-foto]"); if (b) mostrarFoto(+b.dataset.foto); });
-  vp.querySelector(".vp-add").addEventListener("click", () => { adicionar(produtoAberto.id); fechar(); });
+  vp.querySelector(".tams").addEventListener("click", e => {
+    const b = e.target.closest("[data-tam]"); if (!b) return;
+    tamanhoEscolhido = +b.dataset.tam;
+    vp.querySelectorAll("[data-tam]").forEach(x => { const on = x === b; x.classList.toggle("ativo", on); x.setAttribute("aria-checked", on); });
+    vp.querySelector(".vp-tam-escolhido").textContent = "· " + tamanhoEscolhido;
+    vp.querySelector(".vp-tam-erro").hidden = true;
+  });
+  vp.querySelector(".vp-add").addEventListener("click", () => {
+    if (!tamanhoEscolhido) {
+      const erro = vp.querySelector(".vp-tam-erro"); erro.hidden = false;
+      erro.classList.remove("tremer"); void erro.offsetWidth; erro.classList.add("tremer");
+      return;
+    }
+    adicionar(produtoAberto.id, tamanhoEscolhido); fechar();
+  });
   let x0 = null;
   const gal = vp.querySelector(".vp-principal");
   gal.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
@@ -104,12 +131,16 @@ function mostrarFoto(n) {
 function abrirProduto(id) {
   const p = PRODUTOS.find(x => x.id === id); if (!p) return;
   if (!document.querySelector(".ver-produto")) criarVisualizacao();
-  produtoAberto = p; fotoAtual = 0;
+  produtoAberto = p; fotoAtual = 0; tamanhoEscolhido = null;
   const vp = document.querySelector(".ver-produto"), varias = temFoto(p) && p.imagens.length > 1;
   vp.querySelector(".vp-tipo").textContent = `${p.tipo === "tenis" ? "Tênis" : "Chinelo"} · ${p.genero === "feminino" ? "Feminino" : "Masculino"}${p.lancamento ? " · Lançamento" : ""}`;
   vp.querySelector("#vp-nome").textContent = p.nome;
   vp.querySelector(".vp-precos").innerHTML = (p.precoAntigo ? `<span class="preco-antigo">${real(p.precoAntigo)}</span>` : "") + `<span class="preco">${real(p.preco)}</span>`;
+  vp.querySelector(".vp-pix").innerHTML = `<b>${real(precoPix(p))}</b> no Pix <span class="tag-pix">-5%</span>`;
   vp.querySelector(".vp-parcela").textContent = `ou 3x de ${real(p.preco / 3)} sem juros`;
+  vp.querySelector(".tams").innerHTML = tamanhos(p).map(t => `<button type="button" role="radio" aria-checked="false" data-tam="${t}">${t}</button>`).join("");
+  vp.querySelector(".vp-tam-escolhido").textContent = "";
+  vp.querySelector(".vp-tam-erro").hidden = true;
   vp.querySelector(".vp-desc").textContent = p.descricao || "";
   vp.querySelector(".vp-desc").hidden = !p.descricao;
   vp.querySelectorAll(".vp-seta").forEach(b => b.hidden = !varias);
@@ -127,19 +158,22 @@ function renderizar(el, lista) {
 // ---------- Carrinho (salvo no navegador) ----------
 let carrinho = [];
 try { carrinho = JSON.parse(localStorage.getItem("carrinho")) || []; } catch (e) {}
+carrinho = carrinho.filter(i => i && i.tamanho && PRODUTOS.some(p => p.id === i.id));
 const salvar = () => { try { localStorage.setItem("carrinho", JSON.stringify(carrinho)); } catch (e) {} };
 
-function adicionar(id) {
-  const item = carrinho.find(i => i.id === id);
-  item ? item.qtd++ : carrinho.push({ id, qtd: 1 });
+// Cada item do carrinho é produto + tamanho
+const chaveItem = i => i.id + "-" + i.tamanho;
+function adicionar(id, tamanho) {
+  const item = carrinho.find(i => i.id === id && i.tamanho === tamanho);
+  item ? item.qtd++ : carrinho.push({ id, tamanho, qtd: 1 });
   salvar(); atualizarCarrinho();
-  aviso("Produto adicionado ao carrinho!");
+  aviso(`Adicionado ao carrinho (tamanho ${tamanho})`);
 }
-function alterar(id, delta) {
-  const item = carrinho.find(i => i.id === id);
+function alterar(chave, delta) {
+  const item = carrinho.find(i => chaveItem(i) === chave);
   if (!item) return;
   item.qtd += delta;
-  if (item.qtd <= 0) carrinho = carrinho.filter(i => i.id !== id);
+  if (item.qtd <= 0) carrinho = carrinho.filter(i => i !== item);
   salvar(); atualizarCarrinho();
 }
 function atualizarCarrinho() {
@@ -152,9 +186,9 @@ function atualizarCarrinho() {
     total += p.preco * i.qtd;
     return `<div class="item">
       <div class="item-img">${miniatura(p)}</div>
-      <div><div class="item-nome">${p.nome}</div><div>${real(p.preco)}</div>
-        <div class="qtd"><button data-menos="${p.id}" aria-label="Diminuir">−</button>${i.qtd}<button data-mais="${p.id}" aria-label="Aumentar">+</button></div></div>
-      <button class="remover" data-remover="${p.id}">Remover</button>
+      <div><div class="item-nome">${p.nome}</div><div class="item-tam">Tamanho ${i.tamanho}</div><div>${real(p.preco)}</div>
+        <div class="qtd"><button data-menos="${chaveItem(i)}" aria-label="Diminuir">−</button>${i.qtd}<button data-mais="${chaveItem(i)}" aria-label="Aumentar">+</button></div></div>
+      <button class="remover" data-remover="${chaveItem(i)}">Remover</button>
     </div>`;
   }).join("") : `<p class="vazio">Seu carrinho está vazio.</p>`;
   document.querySelector(".total-valor").textContent = real(total);
@@ -279,11 +313,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("click", e => {
     const t = e.target.closest("button");
     if (!t) return;
-    if (t.dataset.id) adicionar(+t.dataset.id);
     if (t.dataset.ver) abrirProduto(+t.dataset.ver);
-    if (t.dataset.mais) alterar(+t.dataset.mais, 1);
-    if (t.dataset.menos) alterar(+t.dataset.menos, -1);
-    if (t.dataset.remover) alterar(+t.dataset.remover, -Infinity);
+    if (t.dataset.mais) alterar(t.dataset.mais, 1);
+    if (t.dataset.menos) alterar(t.dataset.menos, -1);
+    if (t.dataset.remover) alterar(t.dataset.remover, -Infinity);
   });
   document.querySelector(".btn-carrinho").addEventListener("click", () => abrirCarrinho(true));
   document.querySelector(".fechar-carrinho").addEventListener("click", () => abrirCarrinho(false));
@@ -292,11 +325,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal = document.querySelector(".modal");
   const totalCarrinho = () => carrinho.reduce((s, i) => s + PRODUTOS.find(p => p.id === i.id).preco * i.qtd, 0);
   const etapa = nome => {
+    const ep = modal.querySelector(".etapa-pix"); if (ep) ep.hidden = true;
     modal.querySelector(".etapa-escolha").hidden = nome !== "escolha";
     modal.querySelector(".etapa-pagamento").hidden = nome !== "pagamento";
     if (nome === "pagamento") renderCheckoutExtra();
   };
   const fecharModal = () => modal.classList.remove("aberto");
+  // Etapa final do Pix: QR Code e copia e cola (criada aqui para valer em todas as páginas)
+  function mostrarEtapaPix(pedido) {
+    let el = modal.querySelector(".etapa-pix");
+    if (!el) { el = document.createElement("div"); el.className = "etapa etapa-pix"; modal.querySelector(".modal-caixa").appendChild(el); }
+    modal.querySelector(".etapa-escolha").hidden = true;
+    modal.querySelector(".etapa-pagamento").hidden = true;
+    el.hidden = false;
+    el.innerHTML = `<h2>Pague com Pix</h2>
+      <p>Pedido <strong>#${pedido.numero}</strong> criado. Você economizou <strong>${real(pedido.desconto)}</strong> com o Pix.</p>
+      ${blocoPix(pedido.pix, pedido.total)}
+      <a href="conta.html?sec=pedidos" class="btn btn-claro pix-ver-pedidos">Ver meus pedidos</a>`;
+    modal.querySelector(".modal-caixa").scrollTop = 0;
+  }
   function abrirFinalizacao(nomeEtapa) {
     const qtd = carrinho.reduce((s, i) => s + i.qtd, 0);
     modal.querySelector(".modal-qtd").textContent = qtd + (qtd === 1 ? " item" : " itens");
@@ -321,6 +368,12 @@ document.addEventListener("DOMContentLoaded", () => {
         : `<p class="extra-alerta">Nenhum cartão cadastrado.</p>`) +
         `<a href="conta.html?sec=cartoes&voltar=pagamento">${u.cartoes.length ? "Adicionar outro" : "Cadastrar cartão"}</a></div>`;
     }
+    const sub = totalCarrinho(), pix = formaPag() === "pix";
+    html = `<div class="extra-bloco resumo">
+      <div class="linha"><span>Subtotal</span><span>${real(sub)}</span></div>
+      ${pix ? `<div class="linha desconto"><span>Desconto Pix (5%)</span><span>− ${real(sub - Pix.comDesconto(sub))}</span></div>` : ""}
+      <div class="linha total-final"><span>Total${pix ? " no Pix" : ""}</span><span>${real(pix ? Pix.comDesconto(sub) : sub)}</span></div>
+    </div>` + html;
     el.innerHTML = html;
   }
   modal.querySelectorAll("input[name=pag]").forEach(r => r.addEventListener("change", renderCheckoutExtra));
@@ -351,12 +404,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const pedido = {
       numero: String(Date.now()).slice(-6), data: new Date().toISOString(),
-      itens: carrinho.map(i => { const p = PRODUTOS.find(x => x.id === i.id); return { id: p.id, nome: p.nome, preco: p.preco, qtd: i.qtd }; }),
-      total: totalCarrinho(), pagamento, endereco: enderecoTexto(u.endereco),
-      status: forma === "boleto" ? "Aguardando pagamento" : "Pagamento aprovado"
+      itens: carrinho.map(i => { const p = PRODUTOS.find(x => x.id === i.id); return { id: p.id, nome: p.nome, preco: p.preco, qtd: i.qtd, tamanho: i.tamanho }; }),
+      subtotal: totalCarrinho(), total: forma === "pix" ? Pix.comDesconto(totalCarrinho()) : totalCarrinho(),
+      pagamento, endereco: enderecoTexto(u.endereco),
+      status: forma === "cartao" ? "Pagamento aprovado" : "Aguardando pagamento"
     };
+    if (forma === "pix") { pedido.desconto = pedido.subtotal - pedido.total; pedido.pix = Pix.codigo(pedido.total, "STN" + pedido.numero); }
     Auth.atualizar(x => { x.pedidos.unshift(pedido); });
-    carrinho = []; salvar(); atualizarCarrinho(); fecharModal(); abrirCarrinho(false);
+    carrinho = []; salvar(); atualizarCarrinho();
+    if (forma === "pix") { mostrarEtapaPix(pedido); return; }
+    fecharModal(); abrirCarrinho(false);
     aviso(`Pedido #${pedido.numero} confirmado! Veja em Meus Pedidos 🎉`);
   });
   // Voltando do login/cadastro direto para o pagamento
