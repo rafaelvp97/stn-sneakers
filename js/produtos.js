@@ -27,6 +27,22 @@ const PRODUTOS = [
       { src: "img/produtos/plataforma-panda-3.jpg", alt: "Par do Tênis Plataforma Panda visto de cima", foco: "50% 55%" }
     ] },
 
+  { id: 20, nome: "Tênis Impulse White Gold", genero: "masculino", tipo: "tenis", preco: 299.90, precoAntigo: null, destaque: false, lancamento: true,
+    cor: "#f4f1ea", sola: "#d4a72c",
+    descricao: "Tênis masculino de corrida branco com detalhes dourados e solado alto com amortecimento ondulado.",
+    imagens: [
+      { src: "img/produtos/white-gold-1.jpg", alt: "Tênis Impulse White Gold na mão, vista lateral", foco: "50% 74%" },
+      { src: "img/produtos/white-gold-2.jpg", alt: "Tênis Impulse White Gold visto de cima", foco: "50% 34%" },
+      { src: "img/produtos/white-gold-3.jpg", alt: "Par do Tênis Impulse White Gold ao lado da caixa", foco: "50% 61%" }
+    ] },
+  { id: 21, nome: "Tênis Knit Black", genero: "masculino", tipo: "tenis", preco: 299.90, precoAntigo: null, destaque: false, lancamento: true,
+    cor: "#111111", sola: "#2b2b2b",
+    descricao: "Tênis masculino todo preto, com cabedal em tecido e solado vazado com amortecimento.",
+    imagens: [
+      { src: "img/produtos/knit-black-1.jpg", alt: "Tênis Knit Black na mão, vista lateral", foco: "50% 56%" },
+      { src: "img/produtos/knit-black-2.jpg", alt: "Calcanhar do Tênis Knit Black", foco: "50% 48%" }
+    ] },
+
   { id: 1,  nome: "Tênis Runner Pro",        genero: "masculino", tipo: "tenis",   preco: 299.90, precoAntigo: 399.90, destaque: true,  cor: "#1d3557", sola: "#f1faee" },
   { id: 2,  nome: "Tênis Street Classic",    genero: "masculino", tipo: "tenis",   preco: 249.90, precoAntigo: null,   destaque: true,  cor: "#111111", sola: "#ffffff" },
   { id: 3,  nome: "Tênis Urban Flex",        genero: "masculino", tipo: "tenis",   preco: 189.90, precoAntigo: 259.90, destaque: false, cor: "#6c757d", sola: "#212529" },
