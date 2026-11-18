@@ -1,4 +1,6 @@
-// Catálogo de produtos. Para adicionar itens, basta incluir novos objetos aqui.
+// Catálogo INICIAL de produtos (usado no modo demonstração e copiado para o banco
+// pelo arquivo supabase/2-produtos-iniciais.sql). Com a loja ligada ao Supabase,
+// os produtos são editados pelo painel admin.html, não mais aqui.
 // precoAntigo preenchido = produto em promoção | destaque: true = aparece em "Destaques"
 // lancamento: true = aparece em "Lançamentos" com selo | imagens: lista de fotos (opcional; sem fotos usa o desenho)
 const PRODUTOS = [

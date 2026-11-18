@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel | STN Sneakers</title>
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="adm-corpo">
+<header class="adm-topo">
+  <a href="index.html" class="logo" aria-label="Ver a loja"><img src="img/logo-branca.png" alt="STN Sneakers" width="600" height="266"></a>
+  <strong class="adm-titulo">Painel da loja</strong>
+  <div class="adm-topo-acoes">
+    <span class="adm-quem"></span>
+    <a href="index.html" class="adm-link" target="_blank" rel="noopener">Ver loja ↗</a>
+    <button class="adm-link adm-sair" hidden>Sair</button>
+  </div>
+</header>
+<p class="adm-demo" hidden>Modo demonstração: as mudanças ficam só neste navegador e o painel abre sem login. Ligue o Supabase em <code>js/config.js</code> para valer para todos.</p>
+
+<main class="adm">
+  <!-- Login -->
+  <section id="adm-login" class="adm-login" hidden>
+    <h1>Entrar no painel</h1>
+    <p class="adm-sub">Use a mesma conta criada no site. Só administradores têm acesso.</p>
+    <form class="form" novalidate>
+      <label>E-mail<input type="email" name="email" autocomplete="email" required></label>
+      <label>Senha<input type="password" name="senha" autocomplete="current-password" required></label>
+      <p class="erro" hidden></p>
+      <button class="btn btn-escuro">Entrar</button>
+    </form>
+  </section>
+
+  <div id="adm-app" hidden>
+    <nav class="adm-abas" aria-label="Seções do painel">
+      <button data-aba="resumo" class="ativo">Resumo</button>
+      <button data-aba="produtos">Produtos e fotos</button>
+      <button data-aba="pedidos">Pedidos <span class="adm-badge" data-badge="pedidos" hidden></span></button>
+      <button data-aba="clientes">Clientes</button>
+      <button data-aba="newsletter">Newsletter</button>
+      <button data-aba="equipe">Equipe</button>
+    </nav>
+
+    <!-- Resumo / fluxo do site -->
+    <section data-painel="resumo">
+      <div class="adm-cab">
+        <h1>Como está a loja</h1>
+        <label class="adm-periodo">Período
+          <select class="sel-periodo"><option value="7">Últimos 7 dias</option><option value="30" selected>Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select>
+        </label>
+      </div>
+      <div class="kpis"></div>
+      <div class="adm-grade-2">
+        <article class="adm-cartao">
+          <h2>Visitantes por dia</h2>
+          <div class="grafico-dias"></div>
+        </article>
+        <article class="adm-cartao">
+          <h2>Funil de compra</h2>
+          <p class="adm-nota">Quantos visitantes chegaram a cada etapa</p>
+          <div class="funil"></div>
+        </article>
+      </div>
+      <div class="adm-grade-2">
+        <article class="adm-cartao">
+          <h2>Produtos mais vistos</h2>
+          <table class="adm-tabela tab-top-produtos"><thead><tr><th>Produto</th><th class="num">Vistas</th><th class="num">No carrinho</th></tr></thead><tbody></tbody></table>
+        </article>
+        <article class="adm-cartao">
+          <h2>Páginas mais visitadas</h2>
+          <table class="adm-tabela tab-paginas"><thead><tr><th>Página</th><th class="num">Visitas</th></tr></thead><tbody></tbody></table>
+        </article>
+      </div>
+    </section>
+
+    <!-- Produtos -->
+    <section data-painel="produtos" hidden>
+      <div class="adm-cab">
+        <h1>Produtos e fotos</h1>
+        <button class="btn btn-escuro btn-novo-produto">+ Novo produto</button>
+      </div>
+      <div class="adm-filtros">
+        <input type="search" class="busca-produto" placeholder="Buscar por nome" aria-label="Buscar produto">
+        <select class="filtro-genero" aria-label="Gênero"><option value="">Todos os gêneros</option><option value="feminino">Feminino</option><option value="masculino">Masculino</option></select>
+        <select class="filtro-visivel" aria-label="Visibilidade"><option value="">Visíveis e ocultos</option><option value="sim">Só visíveis na loja</option><option value="nao">Só ocultos</option></select>
+      </div>
+      <div class="lista-produtos"></div>
+    </section>
+
+    <!-- Pedidos -->
+    <section data-painel="pedidos" hidden>
+      <div class="adm-cab"><h1>Pedidos</h1><button class="btn btn-claro btn-atualizar-pedidos">Atualizar</button></div>
+      <div class="adm-chips filtro-status"></div>
+      <div class="lista-pedidos-adm"></div>
+    </section>
+
+    <!-- Clientes -->
+    <section data-painel="clientes" hidden>
+      <div class="adm-cab"><h1>Clientes</h1><input type="search" class="busca-cliente" placeholder="Buscar nome ou e-mail" aria-label="Buscar cliente"></div>
+      <div class="adm-rolagem"><table class="adm-tabela tab-clientes"><thead><tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Cidade</th><th>Desde</th><th class="num">Pedidos</th><th class="num">Total pago</th></tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <!-- Newsletter -->
+    <section data-painel="newsletter" hidden>
+      <div class="adm-cab"><h1>Newsletter</h1>
+        <div class="adm-botoes"><button class="btn btn-claro btn-copiar-emails">Copiar e-mails</button><button class="btn btn-escuro btn-csv">Baixar planilha (CSV)</button></div></div>
+      <p class="adm-nota">Quem se cadastrou no "Ganhe 10% OFF na primeira compra".</p>
+      <table class="adm-tabela tab-news"><thead><tr><th>E-mail</th><th>Data</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <!-- Equipe -->
+    <section data-painel="equipe" hidden>
+      <div class="adm-cab"><h1>Equipe</h1></div>
+      <p class="adm-nota">Administradores podem editar produtos e fotos, ver e atualizar pedidos, clientes e o fluxo do site.
+        Para incluir alguém, a pessoa cria uma conta no site (Minha conta → Criar conta) e você coloca o e-mail dela aqui.</p>
+      <form class="form form-equipe" novalidate>
+        <label>E-mail da pessoa<input type="email" name="email" required placeholder="nome@exemplo.com"></label>
+        <button class="btn btn-escuro">Tornar administrador</button>
+        <p class="erro" hidden></p>
+      </form>
+      <table class="adm-tabela tab-equipe"><thead><tr><th>Nome</th><th>E-mail</th><th></th></tr></thead><tbody></tbody></table>
+    </section>
+  </div>
+</main>
+
+<!-- Editor de produto -->
+<div class="adm-modal" role="dialog" aria-modal="true" aria-labelledby="ed-titulo" hidden>
+  <form class="adm-modal-caixa form editor" novalidate>
+    <div class="ed-topo"><h2 id="ed-titulo">Editar produto</h2><button type="button" class="ed-fechar" aria-label="Fechar">✕</button></div>
+    <div class="ed-corpo">
+      <div class="ed-fotos">
+        <h3>Fotos <small>A 1ª aparece no cartão; a 2ª, ao passar o mouse.</small></h3>
+        <div class="fotos-lista"></div>
+        <label class="fotos-enviar">
+          <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+          <span>＋ Adicionar fotos</span><small>JPG, PNG ou WEBP. Arraste aqui ou clique.</small>
+        </label>
+      </div>
+      <div class="ed-campos form-grade">
+        <label class="larga">Nome<input name="nome" required maxlength="80"></label>
+        <label>Gênero<select name="genero"><option value="feminino">Feminino</option><option value="masculino">Masculino</option></select></label>
+        <label>Tipo<select name="tipo"><option value="tenis">Tênis</option><option value="chinelo">Chinelo</option></select></label>
+        <label>Preço (R$)<input name="preco" inputmode="decimal" required placeholder="299,90"></label>
+        <label>Preço "de" (R$) <small>preencha para mostrar promoção</small><input name="precoAntigo" inputmode="decimal" placeholder="opcional"></label>
+        <label class="larga">Descrição<textarea name="descricao" rows="3" maxlength="600"></textarea></label>
+        <fieldset class="larga ed-tamanhos"><legend>Tamanhos à venda <small>desmarque os esgotados</small></legend><div class="tams-check"></div></fieldset>
+        <div class="larga ed-marcas">
+          <label class="check"><input type="checkbox" name="ativo"> Visível na loja</label>
+          <label class="check"><input type="checkbox" name="lancamento"> Lançamento</label>
+          <label class="check"><input type="checkbox" name="destaque"> Destaque</label>
+        </div>
+        <label>Ordem <small>menor aparece primeiro</small><input name="ordem" type="number" step="1"></label>
+        <div class="ed-cores"><span>Cores do desenho <small>(sem foto)</small></span>
+          <input type="color" name="cor" aria-label="Cor do tênis"><input type="color" name="sola" aria-label="Cor da sola"></div>
+      </div>
+    </div>
+    <p class="erro" hidden></p>
+    <div class="ed-base">
+      <button type="button" class="btn-lixeira ed-excluir">Excluir produto</button>
+      <span class="ed-espaco"></span>
+      <button type="button" class="btn btn-claro ed-cancelar">Cancelar</button>
+      <button class="btn btn-escuro ed-salvar">Salvar</button>
+    </div>
+  </form>
+</div>
+<div class="adm-dica" role="tooltip" hidden></div>
+<div class="toast"></div>
+
+<script src="js/pix.js"></script>
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/produtos.js"></script>
+<script src="js/loja.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

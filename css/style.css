@@ -418,3 +418,7 @@ input:-webkit-autofill{-webkit-text-fill-color:#111;box-shadow:0 0 0 1000px #fff
 .pag span{display:grid}
 .pag small{color:var(--suave)}
 @media (max-width:540px){.modal-botoes{flex-direction:column-reverse}}
+
+/* Esqueci minha senha */
+.link-esqueci{background:none;border:0;color:var(--suave);text-decoration:underline;cursor:pointer;font-size:.85rem;justify-self:center;padding:4px}
+.link-esqueci:hover{color:var(--texto)}

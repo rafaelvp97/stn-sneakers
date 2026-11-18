@@ -27,9 +27,11 @@ const precoPix = p => Pix.comDesconto(p.preco);
 const temFoto = p => Array.isArray(p.imagens) && p.imagens.length > 0;
 // Miniatura: foto do produto quando existir, senão o desenho
 const miniatura = p => temFoto(p)
-  ? `<img src="${p.imagens[0].src}" alt="${p.imagens[0].alt || p.nome}" loading="lazy" style="object-position:${p.imagens[0].foco || "50% 50%"}">`
+  ? `<img src="${escH(p.imagens[0].src)}" alt="${escH(p.imagens[0].alt || p.nome)}" loading="lazy" style="object-position:${escH(p.imagens[0].foco || "50% 50%")}">`
   : arte(p);
 const real = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+// Protege textos vindos do banco (nomes, fotos) ao montar o HTML
+const escH = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // ---------- Cartões ----------
 function cartao(p) {
@@ -38,14 +40,14 @@ function cartao(p) {
     : p.lancamento ? `<span class="selo lanc">Lançamento</span>`
     : (p.destaque ? `<span class="selo novo">Destaque</span>` : "");
   const imagem = temFoto(p)
-    ? p.imagens.slice(0, 2).map((f, i) => `<img src="${f.src}" alt="${i ? "" : (f.alt || p.nome)}" loading="lazy" class="${i ? "foto-2" : "foto-1"}" style="object-position:${f.foco || "50% 50%"}">`).join("")
+    ? p.imagens.slice(0, 2).map((f, i) => `<img src="${escH(f.src)}" alt="${i ? "" : escH(f.alt || p.nome)}" loading="lazy" class="${i ? "foto-2" : "foto-1"}" style="object-position:${escH(f.foco || "50% 50%")}">`).join("")
       + (p.imagens.length > 1 ? `<span class="qtd-fotos">${p.imagens.length} fotos</span>` : "")
     : arte(p);
   return `<article class="card">
-    <button class="card-img${temFoto(p) ? " com-foto" : ""}" data-ver="${p.id}" aria-label="Ver detalhes de ${p.nome}">${selo}${imagem}</button>
+    <button class="card-img${temFoto(p) ? " com-foto" : ""}" data-ver="${p.id}" aria-label="Ver detalhes de ${escH(p.nome)}">${selo}${imagem}</button>
     <div class="card-corpo">
       <span class="card-tipo">${p.tipo === "tenis" ? "Tênis" : "Chinelo"} · ${p.genero === "feminino" ? "Feminino" : "Masculino"}</span>
-      <h3 class="card-nome"><button class="link-nome" data-ver="${p.id}">${p.nome}</button></h3>
+      <h3 class="card-nome"><button class="link-nome" data-ver="${p.id}">${escH(p.nome)}</button></h3>
       <div class="precos">
         ${p.precoAntigo ? `<span class="preco-antigo">${real(p.precoAntigo)}</span>` : ""}
         <span class="preco">${real(p.preco)}</span>
@@ -125,7 +127,7 @@ function mostrarFoto(n) {
   if (!temFoto(p)) { vp.querySelector(".vp-principal").innerHTML = arte(p); return; }
   fotoAtual = (n + p.imagens.length) % p.imagens.length;
   const f = p.imagens[fotoAtual];
-  vp.querySelector(".vp-principal").innerHTML = `<img src="${f.src}" alt="${f.alt || p.nome}">`;
+  vp.querySelector(".vp-principal").innerHTML = `<img src="${escH(f.src)}" alt="${escH(f.alt || p.nome)}">`;
   vp.querySelectorAll("[data-foto]").forEach(b => b.classList.toggle("ativo", +b.dataset.foto === fotoAtual));
 }
 function abrirProduto(id) {
@@ -145,20 +147,22 @@ function abrirProduto(id) {
   vp.querySelector(".vp-desc").hidden = !p.descricao;
   vp.querySelectorAll(".vp-seta").forEach(b => b.hidden = !varias);
   vp.querySelector(".vp-miniaturas").innerHTML = varias
-    ? p.imagens.map((f, i) => `<button data-foto="${i}" aria-label="Foto ${i + 1}"><img src="${f.src}" alt="" style="object-position:${f.foco || "50% 50%"}"></button>`).join("") : "";
+    ? p.imagens.map((f, i) => `<button data-foto="${i}" aria-label="Foto ${i + 1}"><img src="${escH(f.src)}" alt="" style="object-position:${escH(f.foco || "50% 50%")}"></button>`).join("") : "";
   vp.querySelector(".vp-galeria").classList.toggle("com-foto", temFoto(p));
   mostrarFoto(0);
   vp.classList.add("aberto");
   vp.querySelector(".vp-fechar").focus();
+  Loja.registrar("ver_produto", p.id);
 }
 function renderizar(el, lista) {
-  el.innerHTML = lista.length ? lista.map(cartao).join("") : `<p class="vazio">Nenhum produto encontrado.</p>`;
+  el.innerHTML = lista.length ? lista.map(cartao).join("")
+    : `<p class="vazio">${Loja.erroInicial ? "Não foi possível carregar os produtos agora. Atualize a página em instantes." : "Nenhum produto encontrado."}</p>`;
 }
 
 // ---------- Carrinho (salvo no navegador) ----------
 let carrinho = [];
 try { carrinho = JSON.parse(localStorage.getItem("carrinho")) || []; } catch (e) {}
-carrinho = carrinho.filter(i => i && i.tamanho && PRODUTOS.some(p => p.id === i.id));
+// (itens de produtos que saíram do catálogo são removidos depois que o catálogo carrega)
 const salvar = () => { try { localStorage.setItem("carrinho", JSON.stringify(carrinho)); } catch (e) {} };
 
 // Cada item do carrinho é produto + tamanho
@@ -168,6 +172,7 @@ function adicionar(id, tamanho) {
   item ? item.qtd++ : carrinho.push({ id, tamanho, qtd: 1 });
   salvar(); atualizarCarrinho();
   aviso(`Adicionado ao carrinho (tamanho ${tamanho})`);
+  Loja.registrar("add_carrinho", id);
 }
 function alterar(chave, delta) {
   const item = carrinho.find(i => chaveItem(i) === chave);
@@ -186,7 +191,7 @@ function atualizarCarrinho() {
     total += p.preco * i.qtd;
     return `<div class="item">
       <div class="item-img">${miniatura(p)}</div>
-      <div><div class="item-nome">${p.nome}</div><div class="item-tam">Tamanho ${i.tamanho}</div><div>${real(p.preco)}</div>
+      <div><div class="item-nome">${escH(p.nome)}</div><div class="item-tam">Tamanho ${i.tamanho}</div><div>${real(p.preco)}</div>
         <div class="qtd"><button data-menos="${chaveItem(i)}" aria-label="Diminuir">−</button>${i.qtd}<button data-mais="${chaveItem(i)}" aria-label="Aumentar">+</button></div></div>
       <button class="remover" data-remover="${chaveItem(i)}">Remover</button>
     </div>`;
@@ -207,7 +212,7 @@ function aviso(txt) {
 // ---------- Cabeçalho: nome do cliente logado ----------
 function atualizarCabecalho() {
   const u = typeof Auth !== "undefined" && Auth.atual();
-  document.querySelectorAll(".conta-nome").forEach(el => { el.textContent = u ? "Olá, " + u.nome.split(" ")[0] : "Entrar"; });
+  document.querySelectorAll(".conta-nome").forEach(el => { el.textContent = u ? "Olá, " + (u.nome.split(" ")[0] || "cliente") : "Entrar"; });
 }
 
 
@@ -251,7 +256,17 @@ function iniciarCarrossel(raiz) {
 }
 
 // ---------- Inicialização ----------
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await Loja.pronto;   // espera produtos e conta carregarem
+  carrinho = carrinho.filter(i => i && i.tamanho && PRODUTOS.some(p => p.id === i.id)); salvar();
+  Loja.registrar("visita");
+  // E-mail de suporte vindo da configuração
+  document.querySelectorAll(".contato-email").forEach(a => {
+    a.href = `mailto:${CONFIG.emailSuporte}?subject=Suporte%20STN%20Sneakers`;
+    const t = a.querySelector("span"); if (t) t.innerHTML = `<small>Suporte</small>${escH(CONFIG.emailSuporte)}`;
+  });
+  // Formas de pagamento disponíveis (online: só Pix até ligar cartão/boleto)
+  document.querySelectorAll(".pagamentos input[name=pag]").forEach(r => { if (!Loja.formasPagamento.includes(r.value)) r.closest(".pag").remove(); });
   // Página inicial
   const promo = document.getElementById("promocoes");
   if (promo) renderizar(promo, PRODUTOS.filter(p => p.precoAntigo).slice(0, 8));
@@ -328,7 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const ep = modal.querySelector(".etapa-pix"); if (ep) ep.hidden = true;
     modal.querySelector(".etapa-escolha").hidden = nome !== "escolha";
     modal.querySelector(".etapa-pagamento").hidden = nome !== "pagamento";
-    if (nome === "pagamento") renderCheckoutExtra();
+    if (nome === "pagamento") { renderCheckoutExtra(); Loja.registrar("checkout"); }
   };
   const fecharModal = () => modal.classList.remove("aberto");
   // Etapa final do Pix: QR Code e copia e cola (criada aqui para valer em todas as páginas)
@@ -406,32 +421,20 @@ document.addEventListener("DOMContentLoaded", () => {
   modal.querySelector(".modal-fechar").addEventListener("click", fecharModal);
   modal.addEventListener("click", e => { if (e.target === modal) fecharModal(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") fecharModal(); });
-  modal.querySelector(".confirmar").addEventListener("click", () => {
-    const u = Auth.atual();
+  modal.querySelector(".confirmar").addEventListener("click", async e => {
+    const u = Auth.atual(), botao = e.currentTarget;
     if (!u) { location.href = "conta.html?voltar=pagamento"; return; }
     if (!u.endereco || !u.endereco.rua) return aviso("Cadastre um endereço de entrega.");
     const forma = formaPag();
-    let pagamento = { pix: "Pix", boleto: "Boleto" }[forma];
-    if (forma === "cartao") {
-      const c = u.cartoes.find(x => x.id === modal.querySelector(".sel-cartao")?.value);
-      if (!c) return aviso("Cadastre um cartão para pagar com crédito.");
-      const n = +(modal.querySelector(".sel-parcelas")?.value || 1);
-      pagamento = `Cartão ${c.bandeira} •••• ${c.final} · ${n}x de ${real(totalCarrinho() / n)} sem juros`;
-    }
-    const pedido = {
-      numero: String(Date.now()).slice(-6), data: new Date().toISOString(),
-      itens: carrinho.map(i => { const p = PRODUTOS.find(x => x.id === i.id); return { id: p.id, nome: p.nome, preco: p.preco, qtd: i.qtd, tamanho: i.tamanho }; }),
-      subtotal: totalCarrinho(), total: forma === "pix" ? Pix.comDesconto(totalCarrinho()) : totalCarrinho(),
-      pagamento, endereco: enderecoTexto(u.endereco),
-      status: forma === "cartao" ? "Pagamento aprovado" : "Aguardando pagamento"
-    };
-    if (forma === "cartao") pedido.parcelas = +(modal.querySelector(".sel-parcelas")?.value || 1);
-    if (forma === "pix") {
-      pedido.desconto = pedido.subtotal - pedido.total;
-      pedido.pix = Pix.codigo(pedido.total, "STN" + pedido.numero);
-      pedido.expiraEm = new Date(Date.now() + PIX_CONFIG.validadeMin * 60000).toISOString();
-    }
-    Auth.atualizar(x => { x.pedidos.unshift(pedido); });
+    if (forma === "cartao" && !modal.querySelector(".sel-cartao")) return aviso("Cadastre um cartão para pagar com crédito.");
+    botao.disabled = true; const texto = botao.textContent; botao.textContent = "Criando pedido...";
+    let pedido;
+    try {
+      pedido = await Loja.criarPedido({ itens: carrinho, forma,
+        cartaoId: modal.querySelector(".sel-cartao")?.value, parcelas: +(modal.querySelector(".sel-parcelas")?.value || 1) });
+    } catch (x) { aviso(x.message); return; }
+    finally { botao.disabled = false; botao.textContent = texto; }
+    Loja.registrar("pedido");
     carrinho = []; salvar(); atualizarCarrinho();
     if (forma === "pix") { mostrarEtapaPix(pedido); return; }
     fecharModal(); abrirCarrinho(false);
@@ -443,14 +446,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (carrinho.length && Auth.atual()) { abrirCarrinho(true); abrirFinalizacao("pagamento"); }
   }
   const news = document.querySelector(".news form");
-  if (news) news.addEventListener("submit", e => { e.preventDefault(); news.reset(); aviso("Cadastro realizado! Fique de olho no seu e-mail."); });
+  if (news) news.addEventListener("submit", async e => {
+    e.preventDefault();
+    try { await Loja.newsletter(news.querySelector("input").value); news.reset(); aviso("Cadastro realizado! Fique de olho no seu e-mail."); }
+    catch (x) { aviso(x.message); }
+  });
 
   const carrossel = document.querySelector(".carrossel");
   if (carrossel) iniciarCarrossel(carrossel);
 
   // E-mail de suporte: além de abrir o programa de e-mail, copia o endereço
   document.querySelectorAll(".contato-email").forEach(a => a.addEventListener("click", () => {
-    const email = "igor.amorim@cultura.gov.br";
+    const email = CONFIG.emailSuporte;
     const copiado = () => aviso("E-mail de suporte copiado: " + email);
     try { navigator.clipboard.writeText(email).then(copiado, () => {}); } catch (e) {}
   }));

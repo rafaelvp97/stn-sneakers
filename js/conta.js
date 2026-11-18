@@ -1,6 +1,6 @@
 // ---------- Página "Minha Conta" ----------
 const ESTADOS = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
-const STATUS_COR = { "Pagamento aprovado": "ok", "Aguardando pagamento": "espera", "Pix expirado": "expirado" };
+const STATUS_COR = { "Pagamento aprovado": "ok", "Enviado": "ok", "Entregue": "ok", "Aguardando pagamento": "espera", "Pix expirado": "expirado", "Cancelado": "expirado" };
 const LIXEIRA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
 
 // Máscaras simples de digitação
@@ -67,7 +67,8 @@ function conferirSenhas(form, campoSenha, campoConfirmar) {
   form.addEventListener("reset", () => { dica.hidden = true; });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await Loja.pronto;
   const params = new URLSearchParams(location.search);
   const voltarPagamento = params.get("voltar") === "pagamento";
   const areaLogin = document.getElementById("area-login");
@@ -81,6 +82,42 @@ document.addEventListener("DOMContentLoaded", () => {
   // Ao digitar de novo, tira o vermelho do campo
   document.querySelectorAll(".form input").forEach(i => i.addEventListener("input", () => i.classList.remove("invalido")));
   document.querySelector("#form-endereco select").insertAdjacentHTML("beforeend", ESTADOS.map(e => `<option>${e}</option>`).join(""));
+  // Cartões salvos só existem enquanto o pagamento com cartão estiver ativo
+  if (!Loja.formasPagamento.includes("cartao")) document.querySelector('.sub[data-sub="cartoes"]').remove();
+  document.querySelector(".auth-nota").textContent = Loja.online
+    ? "Seus dados ficam protegidos e sua senha nunca é vista pela loja."
+    : "Versão de demonstração: sua conta fica salva apenas neste navegador.";
+
+  // ----- Esqueci minha senha (só com o Supabase ligado) -----
+  if (Loja.online) {
+    const fEntrar = document.getElementById("form-entrar");
+    fEntrar.insertAdjacentHTML("beforeend", `<button type="button" class="link-esqueci">Esqueci minha senha</button>`);
+    fEntrar.querySelector(".link-esqueci").addEventListener("click", async () => {
+      const email = fEntrar.email.value.trim();
+      if (!email || !fEntrar.email.checkValidity()) return erro(fEntrar, "Digite seu e-mail acima e clique de novo em \"Esqueci minha senha\".", ["email"]);
+      try { await Loja.recuperarSenha(email); erro(fEntrar); aviso("Enviamos um link para criar uma nova senha. Confira seu e-mail."); }
+      catch (x) { erro(fEntrar, x.message); }
+    });
+  }
+  function telaNovaSenha() {
+    areaLogin.hidden = false; areaCliente.hidden = true;
+    areaLogin.innerHTML = `<h2 class="sub-titulo">Crie uma nova senha</h2>
+      <form id="form-nova-senha" class="form" novalidate>
+        <label>Nova senha <small>(mínimo 6 caracteres)</small><input type="password" name="nova" autocomplete="new-password" required></label>
+        <label>Confirmar nova senha<input type="password" name="confirmar" autocomplete="new-password" required></label>
+        <p class="erro" hidden></p>
+        <button class="btn btn-escuro">Salvar nova senha</button>
+      </form>`;
+    const f = document.getElementById("form-nova-senha");
+    f.addEventListener("submit", async e => {
+      e.preventDefault(); const d = dados(f);
+      if (d.nova.length < 6) return erro(f, "A senha precisa ter pelo menos 6 caracteres.", ["nova"]);
+      if (d.nova !== d.confirmar) return erro(f, "A confirmação está diferente da nova senha.", ["confirmar"]);
+      try { await Loja.definirNovaSenha(d.nova); aviso("Senha alterada! Você já está na sua conta."); location.href = "conta.html"; }
+      catch (x) { erro(f, x.message); }
+    });
+  }
+  document.addEventListener("stn-recuperar-senha", telaNovaSenha);
 
   // ----- Entrar / Criar conta -----
   document.querySelectorAll(".aba").forEach(b => b.addEventListener("click", () => {
@@ -107,7 +144,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!f.email.checkValidity()) return erro(f, "Digite um e-mail válido.", ["email"]);
     if (d.senha.length < 6) return erro(f, "A senha precisa ter pelo menos 6 caracteres.", ["senha"]);
     if (d.senha !== d.confirmar) return erro(f, "Erro na senha: a confirmação está diferente da senha.", ["confirmar"]);
-    try { await Auth.cadastrar(d); f.reset(); erro(f); aviso("Conta criada! Bem-vindo(a) 🎉"); depoisDeEntrar(); }
+    try {
+      const r = await Auth.cadastrar(d); f.reset(); erro(f);
+      if (r && r.confirmar) {
+        document.querySelector('.aba[data-aba="entrar"]').click();
+        const av = document.querySelector(".auth-aviso"); av.hidden = false;
+        av.textContent = "Conta criada! Enviamos um link de confirmação para " + d.email + ". Abra o e-mail e depois entre aqui.";
+        return;
+      }
+      aviso("Conta criada! Bem-vindo(a) 🎉"); depoisDeEntrar();
+    }
     catch (x) { erro(f, x.message, ["email"]); }
   });
 
@@ -123,26 +169,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   document.querySelectorAll(".pm[data-sec]").forEach(b => b.addEventListener("click", () => secao(b.dataset.sec)));
   document.querySelectorAll(".sub").forEach(b => b.addEventListener("click", () => subsecao(b.dataset.sub)));
-  document.querySelector(".pm.sair").addEventListener("click", () => {
-    Auth.sair(); atualizarCabecalho(); mostrar(); aviso("Você saiu da sua conta.");
+  document.querySelector(".pm.sair").addEventListener("click", async () => {
+    await Auth.sair(); atualizarCabecalho(); mostrar(); aviso("Você saiu da sua conta.");
   });
 
-  // Pix não pago em 5 minutos passa para "Pix expirado"
-  function expirarPedidos() {
-    const u = Auth.atual(); if (!u) return;
-    if (u.pedidos.some(p => p.pix && p.status === "Aguardando pagamento" && pixExpirado(p)))
-      Auth.atualizar(x => x.pedidos.forEach(p => { if (p.pix && p.status === "Aguardando pagamento" && pixExpirado(p)) p.status = "Pix expirado"; }));
-  }
+  // Pix não pago no prazo aparece como "Pix expirado"
   document.addEventListener("pix-expirou", () => { if (!document.querySelector('[data-painel="pedidos"]').hidden) renderPedidos(); });
 
-  function renderPedidos() {
-    expirarPedidos();
-    const u = Auth.atual(), el = document.querySelector(".lista-pedidos");
-    if (!u.pedidos.length) {
+  async function renderPedidos() {
+    const el = document.querySelector(".lista-pedidos");
+    if (!el.children.length) el.innerHTML = `<p class="sem-itens">Carregando pedidos...</p>`;
+    let pedidos;
+    try { pedidos = (await Loja.meusPedidos()).map(p => ({ ...p, status: Loja.statusVisivel(p) })); }
+    catch (x) { el.innerHTML = `<p class="sem-itens">${esc(x.message)}</p>`; return; }
+    if (!pedidos.length) {
       el.innerHTML = `<div class="sem-itens"><p>Você ainda não fez nenhum pedido.</p><a href="index.html" class="btn btn-escuro">Ir para a loja</a></div>`;
       return;
     }
-    el.innerHTML = u.pedidos.map(p => `
+    el.innerHTML = pedidos.map(p => `
       <article class="pedido">
         <header class="pedido-topo">
           <div><strong>Pedido #${esc(p.numero)}</strong><small>${new Date(p.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</small></div>
@@ -162,7 +206,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="pix-area" hidden>${blocoPix(p.pix, p.total)}</div>
         </div>` : ""}
         ${p.status === "Pix expirado" ? `<div class="pedido-expirado">
-          <p>O prazo de ${PIX_CONFIG.validadeMin} minutos para pagar o Pix acabou e o pagamento não foi feito.</p>
+          <p>${Loja.online
+            ? `O prazo de ${PIX_CONFIG.validadeMin} minutos para pagar o Pix acabou. <b>Se você já pagou, não exclua:</b> a loja confere o pagamento e atualiza o pedido.`
+            : `O prazo de ${PIX_CONFIG.validadeMin} minutos para pagar o Pix acabou e o pagamento não foi feito.`}</p>
           <div class="excluir-area">
             <button type="button" class="btn-lixeira" data-excluir="${esc(p.numero)}" aria-label="Excluir pedido #${esc(p.numero)}" title="Excluir pedido">${LIXEIRA}<span>Excluir</span></button>
           </div>
@@ -182,8 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sim = e.target.closest("[data-confirmar-excluir]");
     if (sim) {
       const num = sim.dataset.confirmarExcluir;
-      Auth.atualizar(u => { u.pedidos = u.pedidos.filter(p => !(p.numero === num && p.status === "Pix expirado")); });
-      renderPedidos(); aviso(`Pedido #${num} excluído.`);
+      Loja.excluirPedido(num).then(() => { renderPedidos(); aviso(`Pedido #${num} excluído.`); }, x => aviso(x.message));
       return;
     }
     if (e.target.closest("[data-cancelar-excluir]")) { renderPedidos(); return; }
@@ -217,19 +262,20 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCartoes();
   }
 
-  document.getElementById("form-dados").addEventListener("submit", e => {
+  document.getElementById("form-dados").addEventListener("submit", async e => {
     e.preventDefault(); const f = e.target, d = dados(f);
     if (!d.nome.trim()) return erro(f, "Informe seu nome.");
     if (d.cpf && d.cpf.replace(/\D/g, "").length !== 11) return erro(f, "CPF incompleto.");
     if (d.telefone && d.telefone.replace(/\D/g, "").length < 10) return erro(f, "Telefone incompleto.");
-    Auth.atualizar(u => { u.nome = d.nome.trim(); u.cpf = d.cpf; u.telefone = d.telefone; u.nascimento = d.nascimento; });
+    try { await Auth.salvar({ nome: d.nome.trim(), cpf: d.cpf, telefone: d.telefone, nascimento: d.nascimento }); }
+    catch (x) { return erro(f, x.message); }
     erro(f); mostrar(); aviso("Informações salvas!");
   });
-  document.getElementById("form-endereco").addEventListener("submit", e => {
+  document.getElementById("form-endereco").addEventListener("submit", async e => {
     e.preventDefault(); const f = e.target, d = dados(f);
     if (d.cep.replace(/\D/g, "").length !== 8) return erro(f, "Digite um CEP válido.");
     if (!d.rua.trim() || !d.numero.trim() || !d.bairro.trim() || !d.cidade.trim() || !d.estado) return erro(f, "Preencha todos os campos obrigatórios.");
-    Auth.atualizar(u => { u.endereco = d; });
+    try { await Auth.salvar({ endereco: d }); } catch (x) { return erro(f, x.message); }
     erro(f); aviso("Endereço salvo!");
     if (voltarPagamento) location.href = "index.html#pagamento";
   });
@@ -255,6 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ----- Mostra a área certa -----
   function mostrar() {
+    if (Loja.modoRecuperacao) return telaNovaSenha();
     const u = Auth.atual();
     areaLogin.hidden = !!u; areaCliente.hidden = !u;
     atualizarCabecalho();
@@ -264,9 +311,13 @@ document.addEventListener("DOMContentLoaded", () => {
       av.hidden = !voltarPagamento; av.textContent = "Entre ou crie sua conta para finalizar a compra. Seu carrinho está guardado.";
       return;
     }
-    document.querySelector(".conta-titulo").textContent = "Olá, " + u.nome.split(" ")[0] + "!";
+    document.querySelector(".conta-titulo").textContent = "Olá, " + (u.nome.split(" ")[0] || "cliente") + "!";
     document.querySelector(".conta-sub").textContent = "Gerencie seus pedidos e seus dados";
-    document.querySelector(".avatar").textContent = u.nome.trim()[0].toUpperCase();
+    document.querySelector(".avatar").textContent = (u.nome.trim()[0] || u.email[0]).toUpperCase();
+    // Atalho para o painel, só para administradores
+    if (Loja.ehAdmin() && !document.querySelector(".pm-admin"))
+      document.querySelector(".pm.sair").insertAdjacentHTML("beforebegin", `<a class="pm pm-admin" href="admin.html">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Painel da loja</a>`);
     document.querySelector(".ola-nome").textContent = u.nome;
     document.querySelector(".ola-email").textContent = u.email;
     preencher();
