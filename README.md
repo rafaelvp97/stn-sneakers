@@ -61,3 +61,14 @@ Para confirmação automática é preciso a API Pix de um banco ou de um interme
 O cliente escolhe o tamanho antes de colocar no carrinho. Para um produto ter numeração diferente, use `tamanhos: [38, 39, 40]` nele em `js/produtos.js`.
 
 O QR Code usa a biblioteca [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (licença MIT), copiada em `js/vendor/qrcode.js`.
+
+## Marca
+- Logo em `img/logo-branca.png` (para fundo escuro) e `img/logo-preta.png` (para fundo claro); ícone da aba em `img/favicon.png`.
+- Onde o nome aparece escrito, use `<span class="marca"><b>STN</b> <i>Sneakers</i></span>` para seguir o estilo da logo
+  (fontes Archivo Black e Gochi Hand, do Google Fonts).
+
+## Pagamento
+- Cartão de crédito: até 3x sem juros (o cliente escolhe 1x, 2x ou 3x).
+- Pix: o cliente tem 5 minutos para pagar (`validadeMin` em `js/pix.js`). Depois disso o pedido vira "Pix expirado"
+  e pode ser excluído pela lixeira em Meus Pedidos. O prazo é controlado pelo site; com QR Code estático o banco
+  ainda aceitaria o pagamento depois, então para expirar de verdade é preciso Pix dinâmico (API de banco/intermediário).

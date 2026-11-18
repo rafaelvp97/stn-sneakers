@@ -10,7 +10,8 @@ img,svg{display:block;max-width:100%}
 /* Cabeçalho */
 .topo{background:var(--preto);color:var(--branco);position:sticky;top:0;z-index:50}
 .topo .container{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
-.logo{font-size:1.5rem;font-weight:800;letter-spacing:2px;white-space:nowrap}
+.logo{display:flex;align-items:center;flex:none}
+.logo img{height:60px;width:auto;display:block}
 .logo span{color:var(--destaque)}
 .menu{display:flex;gap:28px;font-weight:600;text-transform:uppercase;font-size:.9rem;letter-spacing:1px}
 .menu a{padding:6px 0;border-bottom:2px solid transparent;transition:border-color .2s}
@@ -174,6 +175,29 @@ button.card-img{border:0;width:100%;cursor:zoom-in;font:inherit;overflow:hidden}
 .desc-ped{display:block;font-size:.8rem;color:#1e7b3c;font-weight:600;text-align:right}
 .pedido-pix{padding:0 18px 18px;display:grid;gap:14px;justify-items:start}
 .pedido-pix .pix-area{width:100%;max-width:360px}
+/* Escrita da marca no estilo da logo */
+.marca{white-space:nowrap}
+.marca b{font-family:"Archivo Black","Arial Black",Impact,sans-serif;font-weight:400;font-style:normal;display:inline-block;transform:skewX(-14deg);letter-spacing:.12em}
+.marca i{font-family:"Gochi Hand","Comic Sans MS",cursive;font-style:normal;font-size:1.15em;letter-spacing:.02em}
+
+/* Parcelas, prazo do Pix e lixeira */
+.sel-parcelas{font:inherit;padding:8px 10px;border:2px solid var(--borda);border-radius:8px;background:#fff;color:#111}
+.rotulo-parcelas{margin-top:8px}
+.pix-prazo{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:600;color:var(--texto)!important;margin:0 0 12px!important}
+.pix-timer{display:inline-flex;gap:4px;align-items:center;background:#fff4d6;color:#8a5a00;padding:3px 10px;border-radius:999px;font-variant-numeric:tabular-nums}
+.pix-timer.acabando{background:#fdecee;color:#b3261e}
+.pix-expirado-aviso{background:#fdecee;color:#b3261e;border-radius:10px;padding:16px;text-align:center;display:grid;gap:6px}
+.pix-expirado-aviso p{color:#7a1c16!important;margin:0!important;font-size:.9rem}
+.status.expirado{background:#fdecee;color:#b3261e}
+.pedido-expirado{padding:0 18px 18px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.pedido-expirado p{color:var(--suave);font-size:.88rem;margin:0;flex:1 1 240px}
+.excluir-area{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn-lixeira{display:inline-flex;align-items:center;gap:6px;border:2px solid #f3c4c0;background:#fff;color:#b3261e;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;transition:background .2s}
+.btn-lixeira:hover{background:#fdecee}
+.btn-lixeira svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.excluir-pergunta{font-weight:700;font-size:.9rem}
+.btn-sim{border:0;background:#b3261e;color:#fff;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer}
+.btn-nao{border:2px solid var(--borda);background:#fff;color:var(--texto);border-radius:999px;padding:6px 14px;font-weight:700;cursor:pointer}
 .vazio{text-align:center;color:var(--suave);padding:40px 0;grid-column:1/-1}
 
 /* Vantagens */
@@ -194,7 +218,8 @@ button.card-img{border:0;width:100%;cursor:zoom-in;font:inherit;overflow:hidden}
 .rodape h4{color:#fff;margin-bottom:12px;font-size:1rem}
 .rodape ul{list-style:none;display:grid;gap:8px;font-size:.9rem}
 .rodape a:hover{color:#fff}
-.rodape .logo{color:#fff;display:inline-block;margin-bottom:10px}
+.rodape .logo{display:inline-flex;margin-bottom:12px}
+.rodape .logo img{height:84px}
 .contatos{gap:12px!important}
 .contato-linha{display:flex;align-items:flex-start;gap:10px;color:#ddd}
 .contato-linha svg{width:18px;height:18px;flex:none;margin-top:2px;fill:none;stroke:var(--destaque);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -369,7 +394,7 @@ input:-webkit-autofill{-webkit-text-fill-color:#111;box-shadow:0 0 0 1000px #fff
   .banner-arte svg,.arte-dupla{max-width:200px}
   .ordenar{margin-left:0;width:100%}
   .conta-nome{display:none}
-  .logo{font-size:1.2rem;letter-spacing:1px}
+  .logo img{height:50px}
   .acoes{gap:0}
   .form-grade{grid-template-columns:1fr}
   .painel-botoes{grid-template-columns:1fr 1fr}

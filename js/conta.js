@@ -1,6 +1,7 @@
 // ---------- Página "Minha Conta" ----------
 const ESTADOS = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
-const STATUS_COR = { "Pagamento aprovado": "ok", "Aguardando pagamento": "espera" };
+const STATUS_COR = { "Pagamento aprovado": "ok", "Aguardando pagamento": "espera", "Pix expirado": "expirado" };
+const LIXEIRA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
 
 // Máscaras simples de digitação
 const MASCARAS = {
@@ -126,7 +127,16 @@ document.addEventListener("DOMContentLoaded", () => {
     Auth.sair(); atualizarCabecalho(); mostrar(); aviso("Você saiu da sua conta.");
   });
 
+  // Pix não pago em 5 minutos passa para "Pix expirado"
+  function expirarPedidos() {
+    const u = Auth.atual(); if (!u) return;
+    if (u.pedidos.some(p => p.pix && p.status === "Aguardando pagamento" && pixExpirado(p)))
+      Auth.atualizar(x => x.pedidos.forEach(p => { if (p.pix && p.status === "Aguardando pagamento" && pixExpirado(p)) p.status = "Pix expirado"; }));
+  }
+  document.addEventListener("pix-expirou", () => { if (!document.querySelector('[data-painel="pedidos"]').hidden) renderPedidos(); });
+
   function renderPedidos() {
+    expirarPedidos();
     const u = Auth.atual(), el = document.querySelector(".lista-pedidos");
     if (!u.pedidos.length) {
       el.innerHTML = `<div class="sem-itens"><p>Você ainda não fez nenhum pedido.</p><a href="index.html" class="btn btn-escuro">Ir para a loja</a></div>`;
@@ -147,13 +157,36 @@ document.addEventListener("DOMContentLoaded", () => {
           <strong>${p.desconto ? `<small class="desc-ped">Desconto Pix −${real(p.desconto)}</small>` : ""}Total ${real(p.total)}</strong>
         </footer>
         ${p.pix && p.status === "Aguardando pagamento" ? `<div class="pedido-pix">
+          <p class="pix-prazo">Tempo para pagar: ${contadorPix(p)}</p>
           <button type="button" class="btn btn-escuro btn-ver-pix" aria-expanded="false">Ver QR Code do Pix</button>
           <div class="pix-area" hidden>${blocoPix(p.pix, p.total)}</div>
+        </div>` : ""}
+        ${p.status === "Pix expirado" ? `<div class="pedido-expirado">
+          <p>O prazo de ${PIX_CONFIG.validadeMin} minutos para pagar o Pix acabou e o pagamento não foi feito.</p>
+          <div class="excluir-area">
+            <button type="button" class="btn-lixeira" data-excluir="${esc(p.numero)}" aria-label="Excluir pedido #${esc(p.numero)}" title="Excluir pedido">${LIXEIRA}<span>Excluir</span></button>
+          </div>
         </div>` : ""}
       </article>`).join("");
   }
 
   document.querySelector(".lista-pedidos").addEventListener("click", e => {
+    // Lixeira: pede confirmação antes de excluir
+    const lix = e.target.closest("[data-excluir]");
+    if (lix) {
+      lix.parentElement.innerHTML = `<span class="excluir-pergunta">Excluir este pedido?</span>
+        <button type="button" class="btn-sim" data-confirmar-excluir="${lix.dataset.excluir}">Sim, excluir</button>
+        <button type="button" class="btn-nao" data-cancelar-excluir>Cancelar</button>`;
+      return;
+    }
+    const sim = e.target.closest("[data-confirmar-excluir]");
+    if (sim) {
+      const num = sim.dataset.confirmarExcluir;
+      Auth.atualizar(u => { u.pedidos = u.pedidos.filter(p => !(p.numero === num && p.status === "Pix expirado")); });
+      renderPedidos(); aviso(`Pedido #${num} excluído.`);
+      return;
+    }
+    if (e.target.closest("[data-cancelar-excluir]")) { renderPedidos(); return; }
     const b = e.target.closest(".btn-ver-pix"); if (!b) return;
     const area = b.nextElementSibling, abrir = area.hidden;
     area.hidden = !abrir; b.setAttribute("aria-expanded", abrir);

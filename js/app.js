@@ -340,10 +340,20 @@ document.addEventListener("DOMContentLoaded", () => {
     el.hidden = false;
     el.innerHTML = `<h2>Pague com Pix</h2>
       <p>Pedido <strong>#${pedido.numero}</strong> criado. Você economizou <strong>${real(pedido.desconto)}</strong> com o Pix.</p>
-      ${blocoPix(pedido.pix, pedido.total)}
+      <p class="pix-prazo">Pague em até ${PIX_CONFIG.validadeMin} minutos: ${contadorPix(pedido)}</p>
+      <div class="pix-conteudo">${blocoPix(pedido.pix, pedido.total)}</div>
       <a href="conta.html?sec=pedidos" class="btn btn-claro pix-ver-pedidos">Ver meus pedidos</a>`;
     modal.querySelector(".modal-caixa").scrollTop = 0;
   }
+  // Quando o tempo do Pix acaba com a janela aberta, troca o QR Code por um aviso
+  document.addEventListener("pix-expirou", e => {
+    const el = modal.querySelector(".etapa-pix");
+    if (!el || el.hidden || !el.querySelector(`.pix-timer[data-pedido="${e.detail}"]`)) return;
+    el.querySelector(".pix-conteudo").innerHTML = `<div class="pix-expirado-aviso">
+      <strong>O tempo para pagar acabou.</strong>
+      <p>Este QR Code não deve mais ser usado. Você pode excluir o pedido em Meus Pedidos e fazer uma nova compra.</p></div>`;
+    el.querySelector(".pix-prazo").innerHTML = `<span class="status expirado">Pix expirado</span>`;
+  });
   function abrirFinalizacao(nomeEtapa) {
     const qtd = carrinho.reduce((s, i) => s + i.qtd, 0);
     modal.querySelector(".modal-qtd").textContent = qtd + (qtd === 1 ? " item" : " itens");
@@ -364,7 +374,10 @@ document.addEventListener("DOMContentLoaded", () => {
       : `<p class="extra-alerta">Nenhum endereço cadastrado.</p><a href="conta.html?sec=endereco&voltar=pagamento">Cadastrar endereço</a>`) + `</div>`;
     if (formaPag() === "cartao") {
       html += `<div class="extra-bloco"><span class="extra-rotulo">Cartão</span>` + (u.cartoes.length
-        ? `<select class="sel-cartao" aria-label="Escolha o cartão">${u.cartoes.map(c => `<option value="${c.id}">${escHtml(c.bandeira)} •••• ${escHtml(c.final)}</option>`).join("")}</select>`
+        ? `<select class="sel-cartao" aria-label="Escolha o cartão">${u.cartoes.map(c => `<option value="${c.id}">${escHtml(c.bandeira)} •••• ${escHtml(c.final)}</option>`).join("")}</select>
+           <span class="extra-rotulo rotulo-parcelas">Parcelas</span>
+           <select class="sel-parcelas" aria-label="Número de parcelas">${[1, 2, 3].map(n =>
+             `<option value="${n}"${n === parcelas ? " selected" : ""}>${n}x de ${real(totalCarrinho() / n)} sem juros${n === 1 ? " (à vista)" : ""}</option>`).join("")}</select>`
         : `<p class="extra-alerta">Nenhum cartão cadastrado.</p>`) +
         `<a href="conta.html?sec=cartoes&voltar=pagamento">${u.cartoes.length ? "Adicionar outro" : "Cadastrar cartão"}</a></div>`;
     }
@@ -377,6 +390,8 @@ document.addEventListener("DOMContentLoaded", () => {
     el.innerHTML = html;
   }
   modal.querySelectorAll("input[name=pag]").forEach(r => r.addEventListener("change", renderCheckoutExtra));
+  let parcelas = 1;   // até 3x sem juros
+  modal.addEventListener("change", e => { if (e.target.matches(".sel-parcelas")) parcelas = +e.target.value; });
 
   document.querySelector(".finalizar").addEventListener("click", () => {
     if (!carrinho.length) return aviso("Adicione produtos ao carrinho.");
@@ -400,7 +415,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (forma === "cartao") {
       const c = u.cartoes.find(x => x.id === modal.querySelector(".sel-cartao")?.value);
       if (!c) return aviso("Cadastre um cartão para pagar com crédito.");
-      pagamento = `Cartão ${c.bandeira} •••• ${c.final}`;
+      const n = +(modal.querySelector(".sel-parcelas")?.value || 1);
+      pagamento = `Cartão ${c.bandeira} •••• ${c.final} · ${n}x de ${real(totalCarrinho() / n)} sem juros`;
     }
     const pedido = {
       numero: String(Date.now()).slice(-6), data: new Date().toISOString(),
@@ -409,7 +425,12 @@ document.addEventListener("DOMContentLoaded", () => {
       pagamento, endereco: enderecoTexto(u.endereco),
       status: forma === "cartao" ? "Pagamento aprovado" : "Aguardando pagamento"
     };
-    if (forma === "pix") { pedido.desconto = pedido.subtotal - pedido.total; pedido.pix = Pix.codigo(pedido.total, "STN" + pedido.numero); }
+    if (forma === "cartao") pedido.parcelas = +(modal.querySelector(".sel-parcelas")?.value || 1);
+    if (forma === "pix") {
+      pedido.desconto = pedido.subtotal - pedido.total;
+      pedido.pix = Pix.codigo(pedido.total, "STN" + pedido.numero);
+      pedido.expiraEm = new Date(Date.now() + PIX_CONFIG.validadeMin * 60000).toISOString();
+    }
     Auth.atualizar(x => { x.pedidos.unshift(pedido); });
     carrinho = []; salvar(); atualizarCarrinho();
     if (forma === "pix") { mostrarEtapaPix(pedido); return; }

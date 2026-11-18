@@ -6,7 +6,8 @@ const PIX_CONFIG = {
   chave: "",
   nome: "STN SNEAKERS",   // até 25 letras, sem acento
   cidade: "BRASILIA",     // até 15 letras, sem acento
-  desconto: 0.05          // 5% de desconto no Pix
+  desconto: 0.05,         // 5% de desconto no Pix
+  validadeMin: 5          // minutos para pagar o QR Code
 };
 const PIX_DEMO = !PIX_CONFIG.chave;
 
@@ -67,3 +68,23 @@ document.addEventListener("click", e => {
   try { navigator.clipboard.writeText(txt).then(ok, () => { b.previousElementSibling.querySelector("textarea").select(); document.execCommand("copy"); ok(); }); }
   catch (x) { b.previousElementSibling.querySelector("textarea").select(); document.execCommand("copy"); ok(); }
 });
+
+// ---------- Prazo para pagar o Pix ----------
+// Atenção: o prazo é controlado pelo site. Um QR Code Pix "estático" (só com a chave)
+// continua aceito pelo banco depois do prazo; para expirar de verdade é preciso Pix
+// dinâmico gerado pela API de um banco ou intermediário.
+const expiraPix = pedido => new Date(pedido.expiraEm || (new Date(pedido.data).getTime() + PIX_CONFIG.validadeMin * 60000)).getTime();
+const pixExpirado = pedido => Date.now() >= expiraPix(pedido);
+function mmss(ms) { const s = Math.max(0, Math.ceil(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
+const contadorPix = pedido => `<span class="pix-timer" data-expira="${expiraPix(pedido)}" data-pedido="${pedido.numero}">⏱ <b>${mmss(expiraPix(pedido) - Date.now())}</b></span>`;
+setInterval(() => {
+  document.querySelectorAll(".pix-timer").forEach(t => {
+    const resta = +t.dataset.expira - Date.now();
+    t.querySelector("b").textContent = mmss(resta);
+    t.classList.toggle("acabando", resta <= 60000);
+    if (resta <= 0 && !t.dataset.avisado) {
+      t.dataset.avisado = "1";
+      document.dispatchEvent(new CustomEvent("pix-expirou", { detail: t.dataset.pedido }));
+    }
+  });
+}, 1000);
