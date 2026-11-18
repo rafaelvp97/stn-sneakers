@@ -139,6 +139,10 @@ button.card-img{border:0;width:100%;cursor:zoom-in;font:inherit;overflow:hidden}
 .vp-desc{color:var(--suave);margin:6px 0 10px}
 .vp-info .btn{margin-top:auto}
 
+.bloco-genero+.bloco-genero{margin-top:32px}
+.genero-topo{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--borda)}
+.genero-topo h3{font-size:1.15rem;text-transform:uppercase;letter-spacing:1.5px}
+.genero-topo .ver-mais{font-size:.9rem}
 .vazio{text-align:center;color:var(--suave);padding:40px 0;grid-column:1/-1}
 
 /* Vantagens */

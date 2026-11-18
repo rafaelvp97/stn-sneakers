@@ -221,11 +221,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // Página inicial
   const promo = document.getElementById("promocoes");
   if (promo) renderizar(promo, PRODUTOS.filter(p => p.precoAntigo).slice(0, 8));
-  const lanc = document.getElementById("lancamentos");
-  if (lanc) {
-    const lista = PRODUTOS.filter(p => p.lancamento);
-    lanc.closest("section").hidden = !lista.length;
-    renderizar(lanc, lista);
+  // Lançamentos separados por gênero (cada grupo some se estiver vazio)
+  const secLanc = document.getElementById("lancamentos-sec");
+  if (secLanc) {
+    let algum = false;
+    secLanc.querySelectorAll(".bloco-genero").forEach(bloco => {
+      const lista = PRODUTOS.filter(p => p.lancamento && p.genero === bloco.dataset.genero);
+      bloco.hidden = !lista.length; algum = algum || lista.length > 0;
+      renderizar(bloco.querySelector(".grade"), lista);
+    });
+    secLanc.hidden = !algum;
   }
   const dest = document.getElementById("destaques");
   if (dest) renderizar(dest, PRODUTOS.filter(p => p.destaque));
