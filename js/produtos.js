@@ -40,7 +40,16 @@ const PRODUTOS = [
     descricao: "Tênis masculino todo preto, com cabedal em tecido e solado vazado com amortecimento.",
     imagens: [
       { src: "img/produtos/knit-black-1.jpg", alt: "Tênis Knit Black na mão, vista lateral", foco: "50% 56%" },
-      { src: "img/produtos/knit-black-2.jpg", alt: "Calcanhar do Tênis Knit Black", foco: "50% 48%" }
+      { src: "img/produtos/knit-black-2.jpg", alt: "Calcanhar do Tênis Knit Black", foco: "50% 48%" },
+      { src: "img/produtos/knit-black-3.jpg", alt: "Tênis Knit Black visto de cima", foco: "50% 54%" }
+    ] },
+  { id: 22, nome: "Tênis Cushion White", genero: "masculino", tipo: "tenis", preco: 299.90, precoAntigo: null, destaque: false, lancamento: true,
+    cor: "#ffffff", sola: "#c9c9c9",
+    descricao: "Tênis masculino branco com detalhe preto na lateral e amortecimento a ar visível no calcanhar.",
+    imagens: [
+      { src: "img/produtos/cushion-white-1.jpg", alt: "Tênis Cushion White na mão, vista lateral", foco: "50% 45%" },
+      { src: "img/produtos/cushion-white-3.jpg", alt: "Tênis Cushion White na mão, outra vista lateral", foco: "50% 20%" },
+      { src: "img/produtos/cushion-white-2.jpg", alt: "Pares do Tênis Cushion White vistos de cima", foco: "50% 50%" }
     ] },
 
   { id: 1,  nome: "Tênis Runner Pro",        genero: "masculino", tipo: "tenis",   preco: 299.90, precoAntigo: 399.90, destaque: true,  cor: "#1d3557", sola: "#f1faee" },
